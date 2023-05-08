@@ -67,7 +67,7 @@ public class MqttMessage {
         this.qos = qos;
     }
 
-    public boolean getRetained() {
+    public boolean isRetained() {
         return retained;
     }
 
@@ -83,11 +83,11 @@ public class MqttMessage {
         this.dup = dup;
     }
 
-    public int getMessageId() {
+    public int getId() {
         return messageId;
     }
 
-    public void setMessageId(final int messageId) {
+    public void setId(final int messageId) {
         this.messageId = messageId;
     }
 }

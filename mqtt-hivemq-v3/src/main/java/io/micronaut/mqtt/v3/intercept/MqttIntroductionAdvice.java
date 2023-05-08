@@ -17,7 +17,6 @@ package io.micronaut.mqtt.v3.intercept;
 
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
 import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 import io.micronaut.aop.InterceptorBean;
 import io.micronaut.aop.MethodInvocationContext;
@@ -25,7 +24,6 @@ import io.micronaut.mqtt.annotation.v3.MqttPublisher;
 import io.micronaut.mqtt.bind.MqttBinderRegistry;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
-import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.intercept.AbstractMqttIntroductionAdvice;
 import io.micronaut.mqtt.v3.bind.MqttV3BindingContext;
 import jakarta.inject.Singleton;
@@ -66,9 +64,11 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
             .topic(topic)
             .payload(message.getPayload())
             .qos(MqttQos.fromCode(message.getQos()))
-            .retain(message.getRetained())
+            .retain(message.isRetained())
             .send();
-        publishFuture.whenComplete(listener);
+        publishFuture.whenComplete((mqtt3Publish, throwable) -> {
+            listener.accept(mqtt3Publish, throwable);
+        });
 
         return null;
 

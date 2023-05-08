@@ -59,22 +59,22 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public boolean isRetained() {
-        return false; //message.isRetained();
+        return message.isRetained();
     }
 
     @Override
     public void setRetained(boolean retained) {
-        //message.setRetained(retained);
+        message.setRetained(retained);
     }
 
     @Override
     public int getQos() {
-        return 0; //message.getQos();
+        return message.getQos();
     }
 
     @Override
     public void setQos(int qos) {
-        //message.setQos(qos);
+        message.setQos(qos);
     }
 
     @Override
@@ -89,7 +89,7 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public int getId() {
-        return 1; //message.getId();
+        return message.getId();
     }
 
     @Override

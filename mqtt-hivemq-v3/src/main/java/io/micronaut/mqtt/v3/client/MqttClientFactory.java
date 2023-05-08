@@ -16,15 +16,19 @@
 package io.micronaut.mqtt.v3.client;
 
 import com.hivemq.client.mqtt.MqttClient;
+import com.hivemq.client.mqtt.MqttClientExecutorConfig;
 import com.hivemq.client.mqtt.MqttClientTransportConfig;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties;
 import io.micronaut.scheduling.TaskExecutors;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.concurrent.ExecutorService;
@@ -41,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 @Factory
 public final class MqttClientFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(MqttClientFactory.class);
+
     @Singleton
     @Bean(preDestroy = "disconnect")
     Mqtt3AsyncClient mqttClient(MqttClientConfigurationProperties configuration,
@@ -48,6 +54,9 @@ public final class MqttClientFactory {
         ScheduledExecutorService consumerExecutor = (ScheduledExecutorService) executorService;
 
         final URI serverUri = URI.create(configuration.getServerUri());
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Connecting to {} on port {}", serverUri.getHost(), serverUri.getPort());
+        }
 
         // TODO: read all connection options properly
         final MqttClientTransportConfig transportConfig = MqttClientTransportConfig.builder()
@@ -55,6 +64,7 @@ public final class MqttClientFactory {
             .build();
 
         final Mqtt3AsyncClient client = MqttClient.builder()
+            .executorConfig(MqttClientExecutorConfig.builder().nettyExecutor(consumerExecutor).build())
             .useMqttVersion3()
             .identifier(configuration.getClientId())
             .serverHost(serverUri.getHost())
@@ -63,6 +73,11 @@ public final class MqttClientFactory {
             .buildAsync();
 
         client.connect()
+            .whenComplete((mqtt3ConnAck, throwable) -> {
+                if (throwable != null) {
+                    throw new MqttClientException("Error connecting mqtt client");
+                }
+            })
             .join();
 
 //        MqttAsyncClient client = new MqttAsyncClient(configuration.getServerUri(), configuration.getClientId(), clientPersistence, new ScheduledExecutorPingSender(consumerExecutor), consumerExecutor, highResolutionTimer);

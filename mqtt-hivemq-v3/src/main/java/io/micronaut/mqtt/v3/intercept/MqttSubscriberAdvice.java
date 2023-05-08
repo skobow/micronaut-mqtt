@@ -15,21 +15,20 @@
  */
 package io.micronaut.mqtt.v3.intercept;
 
-import com.hivemq.client.internal.mqtt.message.MqttMessage;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
 import com.hivemq.client.mqtt.mqtt3.message.subscribe.Mqtt3Subscribe;
-import com.hivemq.client.mqtt.mqtt3.message.subscribe.Mqtt3SubscribeBuilder;
 import com.hivemq.client.mqtt.mqtt3.message.subscribe.Mqtt3Subscription;
 import com.hivemq.client.mqtt.mqtt3.message.unsubscribe.Mqtt3Unsubscribe;
 import io.micronaut.context.BeanContext;
 import io.micronaut.mqtt.bind.MqttBinderRegistry;
 import io.micronaut.mqtt.bind.MqttBindingContext;
+import io.micronaut.mqtt.bind.MqttMessage;
 import io.micronaut.mqtt.exception.MqttSubscriberException;
 import io.micronaut.mqtt.exception.MqttSubscriberExceptionHandler;
 import io.micronaut.mqtt.intercept.AbstractMqttSubscriberAdvice;
+import io.micronaut.mqtt.v3.bind.MqttV3BindingContext;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,16 +80,22 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
         final Mqtt3Subscribe mqttSubscribe = Mqtt3Subscribe.builder()
             .addSubscriptions(
-                topicMap.entrySet().stream().map(topicEntry -> {
-                    return Mqtt3Subscription.builder()
-                        .topicFilter(topicEntry.getKey())
-                        .qos(MqttQos.fromCode(topicEntry.getValue()))
-                        .build();
-                })
+                topicMap.entrySet().stream().map(topicEntry -> Mqtt3Subscription.builder()
+                    .topicFilter(topicEntry.getKey())
+                    .qos(MqttQos.fromCode(topicEntry.getValue()))
+                    .build())
             ).build();
 
         mqttAsyncClient
-            .subscribe(mqttSubscribe)
+            .subscribe(mqttSubscribe, mqtt3Publish -> {
+                LOG.trace("Received message: {}", new String(mqtt3Publish.getPayloadAsBytes()));
+
+                // TODO: populate MqttMessage properly
+                final MqttMessage mqttMessage = new MqttMessage(mqtt3Publish.getPayloadAsBytes());
+                mqttMessage.setQos(mqtt3Publish.getQos().getCode());
+
+                callback.accept(new MqttV3BindingContext(mqttAsyncClient, mqttMessage));
+            })
             .whenComplete((mqtt3SubAck, throwable) -> {
                 if (throwable != null) {
                     throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", throwable.getMessage()), throwable);
