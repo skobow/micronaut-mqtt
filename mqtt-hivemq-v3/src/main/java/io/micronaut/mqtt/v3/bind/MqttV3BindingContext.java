@@ -15,12 +15,11 @@
  */
 package io.micronaut.mqtt.v3.bind;
 
+import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
-import io.micronaut.mqtt.exception.MqttSubscriberException;
-import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import io.micronaut.mqtt.bind.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +34,7 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttV3BindingContext.class);
 
-    private final MqttAsyncClient client;
+    private final Mqtt3AsyncClient client;
     private final MqttMessage message;
     private String topic;
 
@@ -43,7 +42,7 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
      * @param client The client
      * @param message The message
      */
-    public MqttV3BindingContext(MqttAsyncClient client, MqttMessage message) {
+    public MqttV3BindingContext(Mqtt3AsyncClient client, MqttMessage message) {
         this.client = client;
         this.message = message;
     }
@@ -60,22 +59,22 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public boolean isRetained() {
-        return message.isRetained();
+        return false; //message.isRetained();
     }
 
     @Override
     public void setRetained(boolean retained) {
-        message.setRetained(retained);
+        //message.setRetained(retained);
     }
 
     @Override
     public int getQos() {
-        return message.getQos();
+        return 0; //message.getQos();
     }
 
     @Override
     public void setQos(int qos) {
-        message.setQos(qos);
+        //message.setQos(qos);
     }
 
     @Override
@@ -90,19 +89,19 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public int getId() {
-        return message.getId();
+        return 1; //message.getId();
     }
 
     @Override
     public void acknowlege() {
-        try {
-            if (LOG.isTraceEnabled()) {
-                LOG.trace("Acknowledging message id {} with qos {}", message.getId(), message.getQos());
-            }
-            client.messageArrivedComplete(message.getId(), message.getQos());
-        } catch (MqttException e) {
-            throw new MqttSubscriberException("Failed to acknowledge the message", e);
-        }
+//        try {
+//            if (LOG.isTraceEnabled()) {
+//                LOG.trace("Acknowledging message id {} with qos {}", message.getId(), message.getQos());
+//            }
+//            client.messageArrivedComplete(message.getId(), message.getQos());
+//        } catch (MqttException e) {
+//            throw new MqttSubscriberException("Failed to acknowledge the message", e);
+//        }
     }
 
     @Override

@@ -82,22 +82,31 @@ public abstract class AbstractMqttSubscriberAdvice<M> implements ExecutableMetho
                         binders[i] = (MqttBinder<MqttBindingContext<?>, Object>) binderRegistry.findArgumentBinder(arguments[i]);
                     }
 
-                    String[] topicValues = new String[topicAnnotations.size()];
-                    int[] qosValues = new int[topicAnnotations.size()];
+//                    String[] topicValues = new String[topicAnnotations.size()];
+//                    int[] qosValues = new int[topicAnnotations.size()];
+                    final Map<String, Integer> topicMap = new HashMap<>(topicAnnotations.size());
 
                     for (int i = 0; i < topicAnnotations.size(); i++) {
                         AnnotationValue<Topic> topicAnn = topicAnnotations.get(i);
-                        topicValues[i] = topicAnn.getRequiredValue(String.class); //the value is required
-                        qosValues[i] = topicAnn.getRequiredValue("qos", int.class);
+                        topicMap.put(
+                            topicAnn.getRequiredValue(String.class), //the value is required
+                            topicAnn.getRequiredValue("qos", int.class)
+                        );
+//                        topicValues[i] = topicAnn.getRequiredValue(String.class); //the value is required
+//                        qosValues[i] = topicAnn.getRequiredValue("qos", int.class);
                     }
 
-                    topics.addAll(Arrays.asList(topicValues));
+                    topics.addAll(topicMap.keySet());
                     if (LOG.isTraceEnabled()) {
-                        for (int i = 0; i < topicValues.length; i++) {
-                            LOG.trace("Subscribing to {} with Qos {}", topicValues[i], qosValues[i]);
-                        }
+                        topicMap.forEach((topic, qos) -> {
+                                LOG.trace("Subscribing to {} with Qos {}", topic, qos);
+                            })
+                        ;
+//                        for (int i = 0; i < topicValues.length; i++) {
+//                            LOG.trace("Subscribing to {} with Qos {}", topicValues[i], qosValues[i]);
+//                        }
                     }
-                    subscribe(topicValues, qosValues, (context) -> {
+                    subscribe(topicMap, (context) -> {
                         if (LOG.isTraceEnabled()) {
                             LOG.trace("Received the following message from {}", context.getTopic());
                             LOG.trace("Qos = {}, MessageId = {}, Payload = {}", context.getQos(), context.getId(), new String(context.getPayload()));
@@ -115,7 +124,10 @@ public abstract class AbstractMqttSubscriberAdvice<M> implements ExecutableMetho
         }
     }
 
+    @Deprecated
     public abstract void subscribe(String[] topics, int[] qos, Consumer<MqttBindingContext<M>> callback);
+
+    public abstract void subscribe(Map<String, Integer> topicMap, Consumer<MqttBindingContext<M>> callback);
 
     public abstract void unsubscribe(Set<String> topics);
 
