@@ -94,7 +94,10 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
                 final MqttMessage mqttMessage = new MqttMessage(mqtt3Publish.getPayloadAsBytes());
                 mqttMessage.setQos(mqtt3Publish.getQos().getCode());
 
-                callback.accept(new MqttV3BindingContext(mqttAsyncClient, mqttMessage));
+                final MqttV3BindingContext context = new MqttV3BindingContext(mqttAsyncClient, mqttMessage);
+                context.setTopic(mqtt3Publish.getTopic().toString());
+
+                callback.accept(context);
             })
             .whenComplete((mqtt3SubAck, throwable) -> {
                 if (throwable != null) {

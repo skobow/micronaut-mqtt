@@ -24,6 +24,7 @@ import io.micronaut.mqtt.annotation.v3.MqttPublisher;
 import io.micronaut.mqtt.bind.MqttBinderRegistry;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
+import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.intercept.AbstractMqttIntroductionAdvice;
 import io.micronaut.mqtt.v3.bind.MqttV3BindingContext;
 import jakarta.inject.Singleton;
@@ -66,11 +67,12 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
             .qos(MqttQos.fromCode(message.getQos()))
             .retain(message.isRetained())
             .send();
-        publishFuture.whenComplete((mqtt3Publish, throwable) -> {
-            listener.accept(mqtt3Publish, throwable);
-        });
 
-        return null;
+        publishFuture
+            .exceptionally(throwable -> { throw new MqttClientException("Failed to publish the message", throwable); })
+            .whenComplete(listener::accept);
+
+        return null; // TODO: what should be returned here?
 
 //        try {
 //            return mqttRxClient.publish(topic, message, null, listener);

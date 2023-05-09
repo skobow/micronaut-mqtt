@@ -15,7 +15,7 @@
  */
 package io.micronaut.mqtt.v3.client.health;
 
-import com.hivemq.client.mqtt.mqtt3.Mqtt3RxClient;
+import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.util.StringUtils;
@@ -39,14 +39,14 @@ import java.util.Collections;
 @Singleton
 public class MqttHealthIndicator implements HealthIndicator {
     public static final String NAME = "mqtt-client";
-    private Mqtt3RxClient client;
+    private Mqtt3AsyncClient client;
 
     /**
      * Constructor.
      *
      * @param client Mqtt3RxClient.
      */
-    public MqttHealthIndicator(Mqtt3RxClient client) {
+    public MqttHealthIndicator(Mqtt3AsyncClient client) {
         this.client = client;
     }
 
