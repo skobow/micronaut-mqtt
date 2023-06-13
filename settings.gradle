@@ -14,9 +14,10 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name = 'mqtt-parent'
 
 include 'mqtt-core'
+include 'mqtt-hivemq-v3'
+include 'mqtt-hivemq-v5'
 include 'mqttv3'
 include 'mqttv5'
-include 'mqtt-hivemq-v3'
 include 'test-suite-utils'
 include 'mqtt-ssl'
 include 'mqtt-bom'

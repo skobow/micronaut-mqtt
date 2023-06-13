@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2022 original authors
+ * Copyright 2017-2023 original authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.mqtt.v3.config;
+package io.micronaut.mqtt.v5.config;
 
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.mqtt.config.MqttSSLConfiguration;
@@ -22,7 +22,6 @@ import jakarta.validation.constraints.NotNull;
 import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -46,7 +45,7 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
     private WillMessage willMessage;
 
 //    @ConfigurationBuilder(excludes = {"socketFactory", "SSLProperties", "httpsHostnameVerificationEnabled", "SSLHostnameVerifier"})
-//    private final MqttConnectOptions connectOptions = new MqttConnectOptions();
+//    private final MqttConnectionOptions connectOptions = new MqttConnectionOptions();
 
     public MqttClientConfigurationProperties(WillMessage willMessage) {
         if (willMessage.getTopic() != null) {
@@ -57,7 +56,7 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
     /**
      * @return The connection options
      */
-//    public MqttConnectOptions getConnectOptions() {
+//    public MqttConnectionOptions getConnectOptions() {
 //        return connectOptions;
 //    }
 
@@ -105,20 +104,6 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
         this.connectionTimeout = connectionTimeout;
     }
 
-    /**
-     * @return An optional boolean to set the client in manual acknowledge mode
-     */
-    public Optional<Boolean> getManualAcks() {
-        return Optional.ofNullable(manualAcks);
-    }
-
-    /**
-     * @param manualAcks Set to true if you wish to manually acknowledge messages
-     */
-    public void setManualAcks(Boolean manualAcks) {
-        this.manualAcks = manualAcks;
-    }
-
     @Override
     public SocketFactory getSocketFactory() {
         return this.socketFactory;
@@ -151,7 +136,7 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
 
     @Override
     public HostnameVerifier getSSLHostnameVerifier() {
-        return sslHostnameVerifier;
+        return this.sslHostnameVerifier;
     }
 
     @Override

@@ -1,0 +1,141 @@
+/*
+ * Copyright 2017-2023 original authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.micronaut.mqtt.v5.intercept;
+
+import com.hivemq.client.mqtt.datatypes.MqttQos;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties;
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5PublishResult;
+import io.micronaut.aop.InterceptorBean;
+import io.micronaut.aop.MethodInvocationContext;
+import io.micronaut.core.annotation.AnnotationValue;
+import io.micronaut.core.beans.BeanIntrospection;
+import io.micronaut.core.beans.BeanProperty;
+import io.micronaut.core.util.StringUtils;
+import io.micronaut.mqtt.annotation.v5.MqttProperty;
+import io.micronaut.mqtt.annotation.v5.MqttPublisher;
+import io.micronaut.mqtt.bind.*;
+import io.micronaut.mqtt.exception.MqttClientException;
+import io.micronaut.mqtt.intercept.AbstractMqttIntroductionAdvice;
+import io.micronaut.mqtt.v5.bind.MqttV5BindingContext;
+import jakarta.inject.Singleton;
+
+import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
+/**
+ * The MQTT v5 implementation of {@link AbstractMqttIntroductionAdvice}.
+ *
+ * @author James Kleeh
+ * @since 1.0.0
+ */
+@Singleton
+@InterceptorBean(MqttPublisher.class)
+public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiConsumer<Mqtt5PublishResult, Throwable>, MqttMessage> {
+
+    private final Mqtt5AsyncClient mqtt5AsyncClient;
+
+    public MqttIntroductionAdvice(Mqtt5AsyncClient mqttAsyncClient,
+                                  MqttBinderRegistry binderRegistry) {
+        super(binderRegistry);
+        this.mqtt5AsyncClient = mqttAsyncClient;
+    }
+
+    @Override
+    public Object publish(String topic, MqttMessage message, BiConsumer<Mqtt5PublishResult, Throwable> listener) {
+
+        final Mqtt5UserPropertiesBuilder userPropertiesBuilder = Mqtt5UserProperties.builder();
+        message.getProperties().getUserProperties().forEach((prop) -> {
+            userPropertiesBuilder.add(prop.getKey(), prop.getValue());
+        });
+
+        final CompletableFuture<Mqtt5PublishResult> publishFuture = mqtt5AsyncClient.publishWith()
+            .topic(topic)
+            .payload(message.getPayload())
+            .qos(Objects.requireNonNull(MqttQos.fromCode(message.getQos())))
+            .retain(message.isRetained())
+            .userProperties(userPropertiesBuilder.build())
+            .send();
+
+        publishFuture
+            .exceptionally(throwable -> {
+                throw new MqttClientException("Failed to publish the message", throwable);
+            })
+            .whenComplete(listener);
+
+        return null;
+//        try {
+//            return mqttAsyncClient.publish(topic, message, null, listener);
+//        } catch (MqttException e) {
+//            throw new MqttClientException("Failed to publish the message", e);
+//        }
+    }
+
+    @Override
+    public MqttBindingContext<MqttMessage> createBindingContext(MethodInvocationContext<Object, Object> context) {
+        final MqttMessage message = new MqttMessage();
+        final List<AnnotationValue<MqttProperty>> propertyAnnotations = context.getAnnotationValuesByType(MqttProperty.class);
+        final MqttProperties properties = new MqttProperties();
+        propertyAnnotations.forEach((prop) -> {
+            final String name = prop.get("name", String.class).orElse(null);
+            final String value = prop.getValue(String.class).orElse(null);
+            final BeanIntrospection<MqttProperties> introspection = BeanIntrospection.getIntrospection(MqttProperties.class);
+            if (StringUtils.isNotEmpty(name) && StringUtils.isNotEmpty(value)) {
+                final Optional<BeanProperty<MqttProperties, Object>> property = introspection.getProperty(name);
+                if (property.isPresent()) {
+                    property.get().convertAndSet(properties, value);
+                } else {
+                    properties.getUserProperties().add(new UserProperty(name, value));
+                }
+            }
+        });
+        message.setProperties(properties);
+        return new MqttV5BindingContext(mqtt5AsyncClient, message);
+    }
+
+    @Override
+    public BiConsumer<Mqtt5PublishResult, Throwable> createListener(Runnable onSuccess, Consumer<Throwable> onError) {
+        return (mqtt5PublishResult, throwable) -> {
+            if (throwable != null) {
+                onError.accept(throwable);
+            } else {
+                onSuccess.run();
+            }
+        };
+//        return new MqttActionListener() {
+//            @Override
+//            public void onSuccess(IMqttToken asyncActionToken) {
+//                onSuccess.run();
+//            }
+//
+//            @Override
+//            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+//                onError.accept(exception);
+//            }
+//        };
+    }
+
+    @Override
+    public Class<? extends Annotation> getRequiredAnnotation() {
+        return MqttPublisher.class;
+    }
+}

@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -75,6 +76,11 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
         } catch (MqttException e) {
             throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", (Object) topics), e);
         }
+    }
+
+    @Override
+    public void subscribe(final Map<String, Integer> topicMap, final Consumer<MqttBindingContext<MqttMessage>> callback) {
+
     }
 
     @Override

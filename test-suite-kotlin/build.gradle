@@ -14,7 +14,7 @@ dependencies {
     kaptTest(mn.micronaut.inject.java)
 
     testImplementation projects.testSuiteUtils
-    testImplementation projects.micronautMqttv5
+    testImplementation projects.micronautMqttHivemqV5
 }
 
 tasks.named('test') {

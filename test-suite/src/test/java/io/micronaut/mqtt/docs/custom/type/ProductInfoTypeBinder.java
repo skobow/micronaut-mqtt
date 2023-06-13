@@ -5,9 +5,9 @@ import io.micronaut.core.convert.ArgumentConversionContext;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.Argument;
 import io.micronaut.mqtt.bind.TypedMqttBinder;
+import io.micronaut.mqtt.bind.UserProperty;
 import io.micronaut.mqtt.v5.bind.MqttV5BindingContext;
 import jakarta.inject.Singleton;
-import org.eclipse.paho.mqttv5.common.packet.UserProperty;
 
 import java.util.List;
 import java.util.Map;

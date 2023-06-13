@@ -13,27 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.mqtt.v3.bind;
+package io.micronaut.mqtt.v5.bind;
 
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
+import io.micronaut.mqtt.bind.MqttProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A binding context for MQTT v3 messages.
+ * A binding context for MQTT v5 messages.
  *
  * @author James Kleeh
  * @since 1.0.0
  */
 @Internal
-public final class MqttV3BindingContext implements MqttBindingContext<MqttMessage> {
+public final class MqttV5BindingContext implements MqttBindingContext<MqttMessage> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MqttV3BindingContext.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MqttV5BindingContext.class);
 
-    private final Mqtt3AsyncClient client;
+    private final Mqtt5AsyncClient client;
     private final MqttMessage message;
     private String topic;
 
@@ -41,7 +42,7 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
      * @param client The client
      * @param message The message
      */
-    public MqttV3BindingContext(Mqtt3AsyncClient client, MqttMessage message) {
+    public MqttV5BindingContext(Mqtt5AsyncClient client, MqttMessage message) {
         this.client = client;
         this.message = message;
     }
@@ -84,6 +85,14 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
     @Override
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public MqttProperties getProperties() {
+        return message.getProperties();
+    }
+
+    public void setProperties(MqttProperties properties) {
+        message.setProperties(properties);
     }
 
     @Override

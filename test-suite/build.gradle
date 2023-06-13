@@ -15,7 +15,7 @@ dependencies {
     testImplementation(libs.awaitility)
 
     testImplementation projects.testSuiteUtils
-    testImplementation projects.micronautMqttv5
+    testImplementation projects.micronautMqttHivemqV5
 }
 
 tasks.named('test') {

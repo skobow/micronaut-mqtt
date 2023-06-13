@@ -30,6 +30,7 @@ import io.micronaut.mqtt.v3.bind.MqttV3BindingContext;
 import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -64,13 +65,15 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
         final CompletableFuture<Mqtt3Publish> publishFuture = mqtt3AsyncClient.publishWith()
             .topic(topic)
             .payload(message.getPayload())
-            .qos(MqttQos.fromCode(message.getQos()))
+            .qos(Objects.requireNonNull(MqttQos.fromCode(message.getQos())))
             .retain(message.isRetained())
             .send();
 
         publishFuture
-            .exceptionally(throwable -> { throw new MqttClientException("Failed to publish the message", throwable); })
-            .whenComplete(listener::accept);
+            .exceptionally(throwable -> {
+                throw new MqttClientException("Failed to publish the message", throwable);
+            })
+            .whenComplete(listener);
 
         return null; // TODO: what should be returned here?
 

@@ -1,18 +1,18 @@
-package io.micronaut.mqtt.health
+package micronaut.mqtt.health
 
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import io.micronaut.context.ApplicationContext
 import io.micronaut.health.HealthStatus
 import io.micronaut.management.health.indicator.HealthResult
 import io.micronaut.mqtt.test.AbstractMQTTTest
-import io.micronaut.mqtt.v3.client.health.MqttHealthIndicator
+import io.micronaut.mqtt.v5.client.health.MqttHealthIndicator
 import reactor.core.publisher.Flux
 
-class V3HealthIndicatorSpec extends AbstractMQTTTest {
+class V5HealthIndicatorSpec extends AbstractMQTTTest {
 
-    void "mqtt v3 client health indicator"() {
+    void "mqtt v5 client health indicator"() {
         ApplicationContext ctx = startContext()
-        def mqttClient = ctx.getBean(Mqtt3AsyncClient.class)
+        def mqttClient = ctx.getBean(Mqtt5AsyncClient.class)
 
         when:
         def indicator = ctx.getBean(MqttHealthIndicator.class)

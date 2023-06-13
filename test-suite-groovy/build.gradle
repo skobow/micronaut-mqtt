@@ -8,7 +8,7 @@ dependencies {
     testCompileOnly(mnValidation.micronaut.validation.processor)
     testCompileOnly(mnValidation.micronaut.validation)
     testImplementation projects.testSuiteUtils
-    testImplementation projects.micronautMqttv5
+    testImplementation projects.micronautMqttHivemqV5
 }
 
 tasks.named('test') {

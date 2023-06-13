@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.mqtt.v3.client.health;
+package io.micronaut.mqtt.v5.client.health;
 
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import io.micronaut.context.annotation.Requires;
 import io.micronaut.core.async.publisher.Publishers;
 import io.micronaut.core.util.StringUtils;
@@ -39,14 +39,14 @@ import java.util.Collections;
 @Singleton
 public class MqttHealthIndicator implements HealthIndicator {
     public static final String NAME = "mqtt-client";
-    private final Mqtt3AsyncClient client;
+    private final Mqtt5AsyncClient client;
 
     /**
      * Constructor.
      *
-     * @param client Mqtt3RxClient.
+     * @param client MqttAsyncClient.
      */
-    public MqttHealthIndicator(Mqtt3AsyncClient client) {
+    public MqttHealthIndicator(Mqtt5AsyncClient client) {
         this.client = client;
     }
 

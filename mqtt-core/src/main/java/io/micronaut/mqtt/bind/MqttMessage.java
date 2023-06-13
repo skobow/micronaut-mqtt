@@ -29,6 +29,7 @@ public class MqttMessage {
     private boolean retained = false;
     private boolean dup = false;
     private int messageId;
+    private MqttProperties properties;
 
     public MqttMessage() {
         setPayload(new byte[]{});
@@ -38,56 +39,115 @@ public class MqttMessage {
         setPayload(payload);
     }
 
+    /**
+     * Returns whether the message is mutable.
+     * @return mutable
+     */
     public boolean getMutable() {
         return mutable;
     }
 
+    /**
+     * Sets whether the message is mutable.
+     * @param mutable boolean value
+     */
     public void setMutable(final boolean mutable) {
         this.mutable = mutable;
     }
 
     /**
      * Returns the payload as byte array.
-     *
      * @return payload The payload byte array
      */
     public byte[] getPayload() {
         return payload;
     }
 
+    /**
+     * Sets the payload of the message.
+     * @param payload The payload as byte array
+     */
     public void setPayload(final byte[] payload) {
         this.payload = payload;
     }
 
+    /**
+     * Returns the quality of service level for the message.
+     * @return MQTT quality of service level
+     */
     public int getQos() {
         return qos;
     }
 
+    /**
+     * Sets the quality of service level for the message.
+     * @param qos MQTT quality of service level
+     */
     public void setQos(final int qos) {
         this.qos = qos;
     }
 
+    /**
+     * Returns whether the message is a retained message.
+     * @return boolean value
+     */
     public boolean isRetained() {
         return retained;
     }
 
+    /**
+     * Sets whether the message is retained.
+     * @param retained boolean value
+     */
     public void setRetained(final boolean retained) {
         this.retained = retained;
     }
 
+    /**
+     * Returns whether the message is flagged as duplicate.
+     * @return boolean value
+     */
     public boolean getDup() {
         return dup;
     }
 
+    /**
+     * Flags the message as duplicate.
+     * @param dup boolean value
+     */
     public void setDup(final boolean dup) {
         this.dup = dup;
     }
 
+    /**
+     * Returns the message id.
+     * @return message id
+     */
     public int getId() {
         return messageId;
     }
 
+    /**
+     * Sets the message id.
+     * @param messageId message id
+     */
     public void setId(final int messageId) {
         this.messageId = messageId;
+    }
+
+    /**
+     * Sets the MQTT message properties including user properties.
+     * @param properties MQTT message properties
+     */
+    public void setProperties(final MqttProperties properties) {
+        this.properties = properties;
+    }
+
+    /**
+     * Returns the MQTT message properties including user properties.
+     * @return MQTT message properties
+     */
+    public MqttProperties getProperties() {
+        return this.properties;
     }
 }
