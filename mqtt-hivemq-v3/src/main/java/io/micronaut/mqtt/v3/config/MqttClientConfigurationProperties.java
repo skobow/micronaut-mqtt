@@ -44,6 +44,7 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
     private boolean isHttpsHostnameVerificationEnabled;
     private HostnameVerifier sslHostnameVerifier;
     private WillMessage willMessage;
+    private boolean cleanSession;
 
 //    @ConfigurationBuilder(excludes = {"socketFactory", "SSLProperties", "httpsHostnameVerificationEnabled", "SSLHostnameVerifier"})
 //    private final MqttConnectOptions connectOptions = new MqttConnectOptions();
@@ -157,6 +158,14 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
     @Override
     public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
         this.sslHostnameVerifier = hostnameVerifier;
+    }
+
+    public void setCleanSession(final boolean cleanSession) {
+        this.cleanSession = cleanSession;
+    }
+
+    public boolean isCleanSession() {
+        return this.cleanSession;
     }
 
     @ConfigurationProperties("will-message")

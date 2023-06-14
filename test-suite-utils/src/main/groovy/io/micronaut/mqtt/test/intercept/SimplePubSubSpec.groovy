@@ -18,6 +18,7 @@ package io.micronaut.mqtt.test.intercept
 import io.micronaut.context.ApplicationContext
 import io.micronaut.context.annotation.Requires
 import io.micronaut.core.util.StringUtils
+import io.micronaut.messaging.Acknowledgement
 import io.micronaut.mqtt.annotation.MqttSubscriber
 import io.micronaut.mqtt.annotation.Topic
 import io.micronaut.mqtt.test.AbstractMQTTTest

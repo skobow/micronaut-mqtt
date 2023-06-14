@@ -29,11 +29,13 @@ import io.micronaut.mqtt.exception.MqttSubscriberException;
 import io.micronaut.mqtt.exception.MqttSubscriberExceptionHandler;
 import io.micronaut.mqtt.intercept.AbstractMqttSubscriberAdvice;
 import io.micronaut.mqtt.v3.bind.MqttV3BindingContext;
+import io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -50,11 +52,15 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
     private static final Logger LOG = LoggerFactory.getLogger(MqttSubscriberAdvice.class);
     private final Mqtt3AsyncClient mqttAsyncClient;
 
+    private final MqttClientConfigurationProperties configurationProperties;
+
     public MqttSubscriberAdvice(BeanContext beanContext,
                                 MqttBinderRegistry binderRegistry,
                                 MqttSubscriberExceptionHandler exceptionHandler,
-                                Mqtt3AsyncClient mqttAsyncClient) {
+                                Mqtt3AsyncClient mqttAsyncClient,
+                                MqttClientConfigurationProperties configurationProperties) {
         super(beanContext, binderRegistry, exceptionHandler);
+        this.configurationProperties = configurationProperties;
         this.mqttAsyncClient = mqttAsyncClient;
     }
 
@@ -82,7 +88,7 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
             .addSubscriptions(
                 topicMap.entrySet().stream().map(topicEntry -> Mqtt3Subscription.builder()
                     .topicFilter(topicEntry.getKey())
-                    .qos(MqttQos.fromCode(topicEntry.getValue()))
+                    .qos(Objects.requireNonNull(MqttQos.fromCode(topicEntry.getValue())))
                     .build())
             ).build();
 
@@ -96,9 +102,11 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
                 final MqttV3BindingContext context = new MqttV3BindingContext(mqttAsyncClient, mqttMessage);
                 context.setTopic(mqtt3Publish.getTopic().toString());
+                context.setMqtt3Publish(mqtt3Publish);
 
+                configurationProperties.getManualAcks().ifPresent(context::setManualAcks);
                 callback.accept(context);
-            })
+            }, configurationProperties.getManualAcks().orElse(false))
             .whenComplete((mqtt3SubAck, throwable) -> {
                 if (throwable != null) {
                     throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", throwable.getMessage()), throwable);
@@ -114,13 +122,5 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
             ).build();
 
         mqttAsyncClient.unsubscribe(mqtt3Unsubscribe);
-//        try {
-//            IMqttToken token = mqttAsyncClient.unsubscribe(topics.toArray(new String[]{}));
-//            token.waitForCompletion();
-//        } catch (MqttException e) {
-//            if (LOG.isWarnEnabled()) {
-//                LOG.warn("Failed to unsubscribe from the subscribed topics", e);
-//            }
-//        }
     }
 }

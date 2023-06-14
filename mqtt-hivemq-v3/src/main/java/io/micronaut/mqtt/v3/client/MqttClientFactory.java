@@ -24,6 +24,7 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties;
 import io.micronaut.scheduling.TaskExecutors;
+import io.reactivex.schedulers.Schedulers;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -64,16 +65,25 @@ public final class MqttClientFactory {
             .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .serverHost(serverUri.getHost())
             .serverPort(serverUri.getPort())
+//            .sslConfig(MqttClientSslConfig.builder()
+//                    .ver
+//                )
+            .build();
+
+        final MqttClientExecutorConfig executorConfig = MqttClientExecutorConfig.builder()
+            .applicationScheduler(Schedulers.from(consumerExecutor))
             .build();
 
         final Mqtt3AsyncClient client = MqttClient.builder()
-            .executorConfig(MqttClientExecutorConfig.builder().nettyExecutor(consumerExecutor).build())
             .useMqttVersion3()
             .identifier(configuration.getClientId())
+            .executorConfig(executorConfig)
             .transportConfig(transportConfig)
             .buildAsync();
 
-        client.connect()
+        client.connectWith()
+            .cleanSession(configuration.isCleanSession())
+            .send()
             .whenComplete((mqtt3ConnAck, throwable) -> {
                 if (throwable != null) {
                     throw new MqttClientException("Error connecting mqtt client");

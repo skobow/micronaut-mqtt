@@ -16,6 +16,7 @@
 package io.micronaut.mqtt.v3.bind;
 
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
@@ -36,6 +37,8 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
     private final Mqtt3AsyncClient client;
     private final MqttMessage message;
     private String topic;
+    private boolean manualAcks = false;
+    private Mqtt3Publish mqtt3Publish;
 
     /**
      * @param client The client
@@ -93,18 +96,29 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public void acknowlege() {
-//        try {
-//            if (LOG.isTraceEnabled()) {
-//                LOG.trace("Acknowledging message id {} with qos {}", message.getId(), message.getQos());
-//            }
-//            client.messageArrivedComplete(message.getId(), message.getQos());
-//        } catch (MqttException e) {
-//            throw new MqttSubscriberException("Failed to acknowledge the message", e);
-//        }
+        if (mqtt3Publish != null && manualAcks) {
+            mqtt3Publish.acknowledge();
+        }
     }
 
     @Override
     public MqttMessage getNativeMessage() {
         return message;
+    }
+
+    public void setManualAcks(final boolean manualAcks) {
+        this.manualAcks = manualAcks;
+    }
+
+    public boolean getManualAcks() {
+        return manualAcks;
+    }
+
+    public void setMqtt3Publish(final Mqtt3Publish mqtt3Publish) {
+        this.mqtt3Publish = mqtt3Publish;
+    }
+
+    public Mqtt3Publish getMqtt3Publish() {
+        return mqtt3Publish;
     }
 }
