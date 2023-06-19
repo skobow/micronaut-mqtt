@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    api(projects.micronautMqttSsl)
     api(libs.managed.hivemq.client)
 }
 

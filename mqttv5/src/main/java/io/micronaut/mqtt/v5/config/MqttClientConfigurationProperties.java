@@ -101,23 +101,19 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
         this.connectionTimeout = connectionTimeout;
     }
 
-    @Override
     public SocketFactory getSocketFactory() {
         return connectOptions.getSocketFactory();
     }
 
-    @Override
     public void setSocketFactory(SocketFactory socketFactory) {
         connectOptions.setSocketFactory(socketFactory);
     }
 
-    @Override
-    public Properties getSSLProperties() {
+    public Properties getSslProperties() {
         return connectOptions.getSSLProperties();
     }
 
-    @Override
-    public void setSSLProperties(Properties props) {
+    public void setSslProperties(Properties props) {
         connectOptions.setSSLProperties(props);
     }
 

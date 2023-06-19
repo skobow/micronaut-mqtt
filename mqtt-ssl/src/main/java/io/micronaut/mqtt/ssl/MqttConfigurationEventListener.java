@@ -23,6 +23,7 @@ import jakarta.inject.Singleton;
 
 import javax.net.SocketFactory;
 
+@Deprecated
 @Singleton
 class MqttConfigurationEventListener implements BeanCreatedEventListener<MqttSSLConfiguration> {
 
@@ -41,7 +42,7 @@ class MqttConfigurationEventListener implements BeanCreatedEventListener<MqttSSL
                 config.getPrivateKey(),
                 config.getPassword());
         MqttSSLConfiguration configuration = event.getBean();
-        configuration.setSocketFactory(socketFactory);
+        //configuration.setSocketFactory(socketFactory);
         return configuration;
     }
 }

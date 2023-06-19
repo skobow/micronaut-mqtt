@@ -16,14 +16,14 @@
 package io.micronaut.mqtt.v3.config;
 
 import io.micronaut.context.annotation.ConfigurationProperties;
-import io.micronaut.mqtt.config.MqttSSLConfiguration;
+import io.micronaut.core.annotation.Nullable;
+import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
 import jakarta.validation.constraints.NotNull;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
 import java.time.Duration;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 
 /**
  * Configuration for the MQTT client.
@@ -33,34 +33,33 @@ import java.util.Properties;
  * @since 1.0.0
  */
 @ConfigurationProperties("mqtt.client")
-public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
+public class MqttClientConfigurationProperties {
 
     private String serverUri;
     private String clientId;
     private Duration connectionTimeout = Duration.ofSeconds(3);
     private Boolean manualAcks;
-    private SocketFactory socketFactory;
-    private Properties sslProperties;
+    private byte[] password;
+    private String userName;
+    private int maxReconnectDelay;
+    private int keepAliveInterval;
+    private int maxInflight;
+    private boolean cleanSession;
+    private boolean automaticReconnect;
+    private Map<String, String> customWebSocketHeaders;
     private boolean isHttpsHostnameVerificationEnabled;
     private HostnameVerifier sslHostnameVerifier;
     private WillMessage willMessage;
-    private boolean cleanSession;
+    private MqttCertificateConfiguration certificateConfiguration;
 
-//    @ConfigurationBuilder(excludes = {"socketFactory", "SSLProperties", "httpsHostnameVerificationEnabled", "SSLHostnameVerifier"})
-//    private final MqttConnectOptions connectOptions = new MqttConnectOptions();
-
-    public MqttClientConfigurationProperties(WillMessage willMessage) {
+    public MqttClientConfigurationProperties(
+        @Nullable final WillMessage willMessage,
+        @Nullable final MqttCertificateConfiguration certificateConfiguration) {
+        this.certificateConfiguration = certificateConfiguration;
         if (willMessage.getTopic() != null) {
             this.willMessage = willMessage;
         }
     }
-
-    /**
-     * @return The connection options
-     */
-//    public MqttConnectOptions getConnectOptions() {
-//        return connectOptions;
-//    }
 
     /**
      * @return The server URI
@@ -120,52 +119,158 @@ public class MqttClientConfigurationProperties implements MqttSSLConfiguration {
         this.manualAcks = manualAcks;
     }
 
-    @Override
-    public SocketFactory getSocketFactory() {
-        return this.socketFactory;
+    /**
+     * @return The password to use for MQTT connections.
+     */
+    public byte[] getPassword() {
+        return password;
     }
 
-    @Override
-    public void setSocketFactory(SocketFactory socketFactory) {
-        this.socketFactory = socketFactory;
+    /**
+     * @param password The password to use for MQTT connections.
+     */
+    public void setPassword(final byte[] password) {
+        this.password = password;
     }
 
-    @Override
-    public Properties getSSLProperties() {
-        return this.sslProperties;
+    /**
+     * @return The username to use for MQTT connections.
+     */
+    public String getUserName() {
+        return userName;
     }
 
-    @Override
-    public void setSSLProperties(Properties props) {
-        this.sslProperties = props;
+    /**
+     * @param userName The username to use for MQTT connections.
+     */
+    public void setUserName(final String userName) {
+        this.userName = userName;
     }
 
-    @Override
-    public boolean isHttpsHostnameVerificationEnabled() {
-        return this.isHttpsHostnameVerificationEnabled;
+    /**
+     * @return The maximal delay for reconnecting.
+     */
+    public int getMaxReconnectDelay() {
+        return maxReconnectDelay;
     }
 
-    @Override
-    public void setHttpsHostnameVerificationEnabled(boolean httpsHostnameVerificationEnabled) {
-        this.isHttpsHostnameVerificationEnabled = httpsHostnameVerificationEnabled;
+    /**
+     * @param maxReconnectDelay The maximum delay for reconnecting.
+     */
+    public void setMaxReconnectDelay(final int maxReconnectDelay) {
+        this.maxReconnectDelay = maxReconnectDelay;
     }
 
-    @Override
-    public HostnameVerifier getSSLHostnameVerifier() {
-        return sslHostnameVerifier;
+    /**
+     * @return The keep alive interval.
+     */
+    public int getKeepAliveInterval() {
+        return keepAliveInterval;
     }
 
-    @Override
-    public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        this.sslHostnameVerifier = hostnameVerifier;
+    /**
+     * @param keepAliveInterval The keep alive interval.
+     */
+    public void setKeepAliveInterval(final int keepAliveInterval) {
+        this.keepAliveInterval = keepAliveInterval;
     }
 
+    /**
+     * @return The maximal inflight.
+     */
+    public int getMaxInflight() {
+        return maxInflight;
+    }
+
+    /**
+     * @param maxInflight The maximal inflight.
+     */
+    public void setMaxInflight(final int maxInflight) {
+        this.maxInflight = maxInflight;
+    }
+
+    /**
+     * @param cleanSession True if a new session should be started for connection.
+     */
     public void setCleanSession(final boolean cleanSession) {
         this.cleanSession = cleanSession;
     }
 
+    /**
+     * @return If connection should start a new session.
+     */
     public boolean isCleanSession() {
         return this.cleanSession;
+    }
+
+    /**
+     * @return True is automatic reconnect should be performed.
+     */
+    public boolean isAutomaticReconnect() {
+        return automaticReconnect;
+    }
+
+    /**
+     * @param automaticReconnect If an automatic reconnect should be performed.
+     */
+    public void setAutomaticReconnect(final boolean automaticReconnect) {
+        this.automaticReconnect = automaticReconnect;
+    }
+
+    /**
+     * @return The custom headers that should be sent with web socket connections.
+     */
+    public Map<String, String> getCustomWebSocketHeaders() {
+        return customWebSocketHeaders;
+    }
+
+    /**
+     * @param customWebSocketHeaders The custom headers that should be sent with web socket connections.
+     */
+    public void setCustomWebSocketHeaders(final Map<String, String> customWebSocketHeaders) {
+        this.customWebSocketHeaders = customWebSocketHeaders;
+    }
+
+    /**
+     * @return True if hostname verification should be used.
+     */
+    public boolean isHttpsHostnameVerificationEnabled() {
+        return this.isHttpsHostnameVerificationEnabled;
+    }
+
+    /**
+     * @param httpsHostnameVerificationEnabled True if hostname verification should be used.
+     */
+    public void setHttpsHostnameVerificationEnabled(boolean httpsHostnameVerificationEnabled) {
+        this.isHttpsHostnameVerificationEnabled = httpsHostnameVerificationEnabled;
+    }
+
+    /**
+     * @return The hostname verifier to use for hostname verification.
+     */
+    public HostnameVerifier getSSLHostnameVerifier() {
+        return sslHostnameVerifier;
+    }
+
+    /**
+     * @param hostnameVerifier The hostname verifier to use for hostname verification.
+     */
+    public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this.sslHostnameVerifier = hostnameVerifier;
+    }
+
+    /**
+     * @return The last will message that should be sent on ungraceful disconnects.
+     */
+    public WillMessage getWillMessage() {
+        return willMessage;
+    }
+
+    /**
+     * @return The SSL certificate configuration with CA and client certificates.
+     */
+    public MqttCertificateConfiguration getCertificateConfiguration() {
+        return certificateConfiguration;
     }
 
     @ConfigurationProperties("will-message")

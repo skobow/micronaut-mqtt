@@ -16,7 +16,6 @@
 package io.micronaut.mqtt.v3.client;
 
 import com.hivemq.client.mqtt.MqttClient;
-import com.hivemq.client.mqtt.MqttClientExecutorConfig;
 import com.hivemq.client.mqtt.MqttClientTransportConfig;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import io.micronaut.context.annotation.Bean;
@@ -24,7 +23,6 @@ import io.micronaut.context.annotation.Factory;
 import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties;
 import io.micronaut.scheduling.TaskExecutors;
-import io.reactivex.schedulers.Schedulers;
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
@@ -70,14 +68,15 @@ public final class MqttClientFactory {
 //                )
             .build();
 
-        final MqttClientExecutorConfig executorConfig = MqttClientExecutorConfig.builder()
-            .applicationScheduler(Schedulers.from(consumerExecutor))
-            .build();
+        // This seems to cause problems
+//        final MqttClientExecutorConfig executorConfig = MqttClientExecutorConfig.builder()
+//            .applicationScheduler(Schedulers.from(consumerExecutor))
+//            .build();
 
         final Mqtt3AsyncClient client = MqttClient.builder()
             .useMqttVersion3()
             .identifier(configuration.getClientId())
-            .executorConfig(executorConfig)
+//            .executorConfig(executorConfig)
             .transportConfig(transportConfig)
             .buildAsync();
 
@@ -90,13 +89,6 @@ public final class MqttClientFactory {
                 }
             })
             .join();
-
-        // TODO: what about manual ack in HiveMQ client?
-//        MqttAsyncClient client = new MqttAsyncClient(configuration.getServerUri(), configuration.getClientId(), clientPersistence, new ScheduledExecutorPingSender(consumerExecutor), consumerExecutor, highResolutionTimer);
-//        configuration.getManualAcks().ifPresent(client::setManualAcks);
-//        client.connect(configuration.getConnectOptions())
-//                .waitForCompletion(configuration.getConnectionTimeout().toMillis());
-
 
         return client;
     }

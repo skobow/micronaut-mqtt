@@ -20,6 +20,9 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
 import io.micronaut.mqtt.exception.MqttClientException;
+import io.micronaut.mqtt.ssl.CertificateReader;
+import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
+import io.micronaut.mqtt.ssl.PrivateKeyReader;
 import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties;
 import io.micronaut.scheduling.TaskExecutors;
 import jakarta.inject.Named;
@@ -27,7 +30,13 @@ import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.IOException;
 import java.net.URI;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -46,23 +55,27 @@ public final class MqttClientFactory {
 
     @Singleton
     @Bean(preDestroy = "disconnect")
-    Mqtt5AsyncClient mqttClient(MqttClientConfigurationProperties configuration,
-                                @Named(TaskExecutors.MESSAGE_CONSUMER) ExecutorService executorService) {
-        ScheduledExecutorService consumerExecutor = (ScheduledExecutorService) executorService;
+    Mqtt5AsyncClient mqttClient(final MqttClientConfigurationProperties configuration,
+                                @Named(TaskExecutors.MESSAGE_CONSUMER) final ExecutorService executorService) {
+        final ScheduledExecutorService consumerExecutor = (ScheduledExecutorService) executorService;
 
         final URI serverUri = URI.create(configuration.getServerUri());
         if (LOG.isTraceEnabled()) {
             LOG.trace("Connecting to {} on port {}", serverUri.getHost(), serverUri.getPort());
         }
 
-        // TODO: read all connection options incl. SSL/TLS properly
         final MqttClientTransportConfigBuilder transportConfigBuilder = MqttClientTransportConfig.builder()
             .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .serverHost(serverUri.getHost())
             .serverPort(serverUri.getPort());
 
         if ("ssl".equals(serverUri.getScheme())) {
+            final MqttCertificateConfiguration certConfiguration = configuration.getCertificateConfiguration();
+
             final MqttClientSslConfigBuilder sslConfigBuilder = MqttClientSslConfig.builder();
+
+            sslConfigBuilder.keyManagerFactory(buildKeyManagerFactory(certConfiguration));
+            sslConfigBuilder.trustManagerFactory(buildTrustManagerFactory(certConfiguration));
 
             if (configuration.isHttpsHostnameVerificationEnabled()) {
                 sslConfigBuilder.hostnameVerifier(configuration.getSSLHostnameVerifier());
@@ -87,5 +100,49 @@ public final class MqttClientFactory {
             .join();
 
         return client;
+    }
+
+    private KeyManagerFactory buildKeyManagerFactory(final MqttCertificateConfiguration certConfiguration) {
+        try {
+            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+            final Certificate certificate = CertificateReader.readCertificate(certConfiguration.getCertificate());
+
+            final PrivateKey key = PrivateKeyReader.getPrivateKey(certConfiguration.getPrivateKey(), certConfiguration.getPassword());
+
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("certificate", certificate);
+            keyStore.setKeyEntry("private-key", key, certConfiguration.getPassword(), new Certificate[]{certificate});
+
+            kmf.init(keyStore, certConfiguration.getPassword());
+
+            return kmf;
+        } catch (NoSuchAlgorithmException | KeyStoreException | IOException | CertificateException |
+                 UnrecoverableKeyException e) {
+            LOG.error("Error creating KeyManagerFactory: {}", e.getMessage(), e);
+        }
+
+        return null;
+    }
+
+    private TrustManagerFactory buildTrustManagerFactory(final MqttCertificateConfiguration certConfiguration) {
+        try {
+            final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+
+            final Certificate certificate = CertificateReader.readCertificate(certConfiguration.getCertificateAuthority());
+
+            keyStore.load(null);
+            keyStore.setCertificateEntry("ca-certificate", certificate);
+
+            tmf.init(keyStore);
+
+            return tmf;
+        } catch (NoSuchAlgorithmException | KeyStoreException | IOException | CertificateException e) {
+            LOG.error("Error creating TrustManagerFactory: {}", e.getMessage(), e);
+        }
+
+        return null;
     }
 }

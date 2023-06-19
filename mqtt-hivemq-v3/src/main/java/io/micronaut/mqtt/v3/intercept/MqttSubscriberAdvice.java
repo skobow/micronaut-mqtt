@@ -51,7 +51,6 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttSubscriberAdvice.class);
     private final Mqtt3AsyncClient mqttAsyncClient;
-
     private final MqttClientConfigurationProperties configurationProperties;
 
     public MqttSubscriberAdvice(BeanContext beanContext,

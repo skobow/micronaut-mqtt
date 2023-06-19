@@ -15,9 +15,7 @@
  */
 package io.micronaut.mqtt.config;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.HostnameVerifier;
-import java.util.Properties;
 
 /**
  * Generic interface for manipulating SSL based properties
@@ -27,14 +25,6 @@ import java.util.Properties;
  * @since 1.0.0
  */
 public interface MqttSSLConfiguration {
-
-    SocketFactory getSocketFactory();
-
-    void setSocketFactory(SocketFactory socketFactory);
-
-    Properties getSSLProperties();
-
-    void setSSLProperties(Properties props);
 
     boolean isHttpsHostnameVerificationEnabled();
 

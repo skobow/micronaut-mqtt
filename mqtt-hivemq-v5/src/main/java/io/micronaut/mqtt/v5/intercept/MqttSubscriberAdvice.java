@@ -16,20 +16,24 @@
 package io.micronaut.mqtt.v5.intercept;
 
 import com.hivemq.client.mqtt.datatypes.MqttQos;
+import com.hivemq.client.mqtt.datatypes.MqttTopicFilter;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscribe;
 import com.hivemq.client.mqtt.mqtt5.message.subscribe.Mqtt5Subscription;
+import com.hivemq.client.mqtt.mqtt5.message.unsubscribe.Mqtt5Unsubscribe;
 import io.micronaut.context.BeanContext;
 import io.micronaut.mqtt.bind.*;
 import io.micronaut.mqtt.exception.MqttSubscriberException;
 import io.micronaut.mqtt.exception.MqttSubscriberExceptionHandler;
 import io.micronaut.mqtt.intercept.AbstractMqttSubscriberAdvice;
 import io.micronaut.mqtt.v5.bind.MqttV5BindingContext;
+import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -44,13 +48,16 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttSubscriberAdvice.class);
     private final Mqtt5AsyncClient mqttAsyncClient;
+    private final MqttClientConfigurationProperties configurationProperties;
 
     public MqttSubscriberAdvice(BeanContext beanContext,
                                 MqttBinderRegistry binderRegistry,
                                 MqttSubscriberExceptionHandler exceptionHandler,
-                                Mqtt5AsyncClient mqttAsyncClient) {
+                                Mqtt5AsyncClient mqttAsyncClient,
+                                MqttClientConfigurationProperties configurationProperties) {
         super(beanContext, binderRegistry, exceptionHandler);
         this.mqttAsyncClient = mqttAsyncClient;
+        this.configurationProperties = configurationProperties;
     }
 
     @Override
@@ -81,7 +88,7 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
             .addSubscriptions(
                 topicMap.entrySet().stream().map(topicEntry -> Mqtt5Subscription.builder()
                     .topicFilter(topicEntry.getKey())
-                    .qos(MqttQos.fromCode(topicEntry.getValue()))
+                    .qos(Objects.requireNonNull(MqttQos.fromCode(topicEntry.getValue())))
                     .build())
             ).build();
 
@@ -102,8 +109,9 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
                 final MqttV5BindingContext context = new MqttV5BindingContext(mqttAsyncClient, mqttMessage);
                 context.setTopic(mqtt5Publish.getTopic().toString());
 
+                configurationProperties.getManualAcks().ifPresent(context::setManualAcks);
                 callback.accept(context);
-            })
+            }, configurationProperties.getManualAcks().orElse(false))
             .whenComplete((mqtt5SubAck, throwable) -> {
                 if (throwable != null) {
                     throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", throwable.getMessage()), throwable);
@@ -113,13 +121,11 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
     @Override
     public void unsubscribe(Set<String> topics) {
-//        try {
-//            IMqttToken token = mqttAsyncClient.unsubscribe(topics.toArray(new String[]{}));
-//            token.waitForCompletion();
-//        } catch (MqttException e) {
-//            if (LOG.isWarnEnabled()) {
-//                LOG.warn("Failed to unsubscribe from the subscribed topics", e);
-//            }
-//        }
+        final Mqtt5Unsubscribe mqtt5Unsubscribe = Mqtt5Unsubscribe.builder()
+            .addTopicFilters(
+                topics.stream().map(MqttTopicFilter::of)
+            ).build();
+
+        mqttAsyncClient.unsubscribe(mqtt5Unsubscribe);
     }
 }

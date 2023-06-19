@@ -16,6 +16,7 @@
 package io.micronaut.mqtt.v5.bind;
 
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
@@ -37,6 +38,8 @@ public final class MqttV5BindingContext implements MqttBindingContext<MqttMessag
     private final Mqtt5AsyncClient client;
     private final MqttMessage message;
     private String topic;
+    private boolean manualAcks = false;
+    private Mqtt5Publish mqtt5Publish;
 
     /**
      * @param client The client
@@ -102,18 +105,29 @@ public final class MqttV5BindingContext implements MqttBindingContext<MqttMessag
 
     @Override
     public void acknowlege() {
-//        try {
-//            if (LOG.isTraceEnabled()) {
-//                LOG.trace("Acknowledging message id {} with qos {}", message.getId(), message.getQos());
-//            }
-//            client.messageArrivedComplete(message.getId(), message.getQos());
-//        } catch (MqttException e) {
-//            throw new MqttSubscriberException("Failed to acknowledge the message", e);
-//        }
+        if (mqtt5Publish != null && manualAcks) {
+            mqtt5Publish.acknowledge();
+        }
     }
 
     @Override
     public MqttMessage getNativeMessage() {
         return message;
+    }
+
+    public void setManualAcks(final boolean manualAcks) {
+        this.manualAcks = manualAcks;
+    }
+
+    public boolean getManalAcks() {
+        return this.manualAcks;
+    }
+
+    public void setMqtt5Publish(final Mqtt5Publish mqtt5Publish) {
+        this.mqtt5Publish = mqtt5Publish;
+    }
+
+    public Mqtt5Publish getMqtt5Publish() {
+        return this.mqtt5Publish;
     }
 }

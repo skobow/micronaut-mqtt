@@ -36,8 +36,10 @@ import java.security.Security;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 
+@Deprecated
 class MqttSslUtil {
 
+    @Deprecated
     static SSLSocketFactory getSocketFactory(final Readable caCrtFile,
                                                     final Readable crtFile,
                                                     final Readable keyFile,
