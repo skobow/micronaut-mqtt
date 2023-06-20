@@ -7,6 +7,5 @@ repositories {
 }
 
 dependencies {
-    testImplementation(projects.micronautMqttCore)
     testImplementation(projects.micronautMqttHivemqV3)
 }

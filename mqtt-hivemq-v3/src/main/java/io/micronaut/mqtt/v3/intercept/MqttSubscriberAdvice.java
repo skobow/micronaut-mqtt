@@ -64,23 +64,6 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
     }
 
     @Override
-    public void subscribe(String[] topics, int[] qos, Consumer<MqttBindingContext<MqttMessage>> callback) {
-        // Deprecated
-//        try {
-//            IMqttMessageListener messageListener = (actualTopic, message) -> {
-//                MqttV3BindingContext context = new MqttV3BindingContext(mqttAsyncClient, message);
-//                context.setTopic(actualTopic);
-//                callback.accept(context);
-//            };
-//            IMqttMessageListener[] listeners = new IMqttMessageListener[topics.length];
-//            Arrays.fill(listeners, messageListener);
-//            mqttAsyncClient.subscribe(topics, qos, listeners);
-//        } catch (MqttException e) {
-//            throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", (Object) topics), e);
-//        }
-    }
-
-    @Override
     public void subscribe(final Map<String, Integer> topicMap, final Consumer<MqttBindingContext<MqttMessage>> callback) {
 
         final Mqtt3Subscribe mqttSubscribe = Mqtt3Subscribe.builder()

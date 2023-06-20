@@ -61,27 +61,6 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
     }
 
     @Override
-    public void subscribe(String[] topics, int[] qos, Consumer<MqttBindingContext<MqttMessage>> callback) {
-//        try {
-//            //workaround for https://github.com/eclipse/paho.mqtt.java/issues/826
-//            final MqttProperties props = new MqttProperties();
-//            props.setSubscriptionIdentifiers(Arrays.asList(new Integer[] { 0 }));
-//
-//            MqttSubscription[] subscriptions = new MqttSubscription[topics.length];
-//            for (int i = 0; i < topics.length; i++) {
-//                subscriptions[i] = new MqttSubscription(topics[i], qos[i]);
-//            }
-//            mqttAsyncClient.subscribe(subscriptions, null, null, (actualTopic, message) -> {
-//                MqttV5BindingContext context = new MqttV5BindingContext(mqttAsyncClient, message);
-//                context.setTopic(actualTopic);
-//                callback.accept(context);
-//            }, props);
-//        } catch (MqttException e) {
-//            throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", (Object) topics), e);
-//        }
-    }
-
-    @Override
     public void subscribe(final Map<String, Integer> topicMap, final Consumer<MqttBindingContext<MqttMessage>> callback) {
 
         final Mqtt5Subscribe mqttSubscribe = Mqtt5Subscribe.builder()

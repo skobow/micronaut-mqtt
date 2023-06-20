@@ -2,7 +2,6 @@ package io.micronaut.mqtt5.graal;
 
 import io.micronaut.mqtt.annotation.MqttSubscriber;
 import io.micronaut.mqtt.annotation.Topic;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

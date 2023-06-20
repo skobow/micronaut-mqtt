@@ -113,9 +113,6 @@ public abstract class AbstractMqttSubscriberAdvice<M> implements ExecutableMetho
         }
     }
 
-    @Deprecated
-    public abstract void subscribe(String[] topics, int[] qos, Consumer<MqttBindingContext<M>> callback);
-
     public abstract void subscribe(Map<String, Integer> topicMap, Consumer<MqttBindingContext<M>> callback);
 
     public abstract void unsubscribe(Set<String> topics);
