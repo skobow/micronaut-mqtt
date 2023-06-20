@@ -46,6 +46,7 @@ import java.util.function.Consumer;
  * The MQTT v5 implementation of {@link AbstractMqttIntroductionAdvice}.
  *
  * @author James Kleeh
+ * @author Sven Kobow
  * @since 1.0.0
  */
 @Singleton
@@ -64,9 +65,7 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
     public Object publish(String topic, MqttMessage message, BiConsumer<Mqtt5PublishResult, Throwable> listener) {
 
         final Mqtt5UserPropertiesBuilder userPropertiesBuilder = Mqtt5UserProperties.builder();
-        message.getProperties().getUserProperties().forEach((prop) -> {
-            userPropertiesBuilder.add(prop.getKey(), prop.getValue());
-        });
+        message.getProperties().getUserProperties().forEach((prop) -> userPropertiesBuilder.add(prop.getKey(), prop.getValue()));
 
         final CompletableFuture<Mqtt5PublishResult> publishFuture = mqtt5AsyncClient.publishWith()
             .topic(topic)
@@ -74,6 +73,7 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
             .qos(Objects.requireNonNull(MqttQos.fromCode(message.getQos())))
             .retain(message.isRetained())
             .userProperties(userPropertiesBuilder.build())
+            .correlationData(message.getProperties().getCorrelationData())
             .send();
 
         publishFuture

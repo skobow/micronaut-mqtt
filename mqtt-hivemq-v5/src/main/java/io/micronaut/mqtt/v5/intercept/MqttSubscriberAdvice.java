@@ -101,9 +101,18 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
                 mqttMessage.setQos(mqtt5Publish.getQos().getCode());
 
                 final MqttProperties properties = new MqttProperties();
-                mqtt5Publish.getUserProperties().asList().forEach((prop) -> {
-                    properties.getUserProperties().add(new UserProperty(prop.getName().toString(), prop.getValue().toString()));
+                mqtt5Publish.getUserProperties().asList().forEach((prop) -> properties.getUserProperties().add(new UserProperty(prop.getName().toString(), prop.getValue().toString())));
+
+                mqtt5Publish.getCorrelationData().ifPresent(byteBuffer -> {
+                    if (byteBuffer.hasArray() && !byteBuffer.isReadOnly()) {
+                        properties.setCorrelationData(byteBuffer.array());
+                        return;
+                    }
+                    byte[] correlationData = new byte[byteBuffer.capacity()];
+                    byteBuffer.get(correlationData);
+                    properties.setCorrelationData(correlationData);
                 });
+
                 mqttMessage.setProperties(properties);
 
                 final MqttV5BindingContext context = new MqttV5BindingContext(mqttAsyncClient, mqttMessage);

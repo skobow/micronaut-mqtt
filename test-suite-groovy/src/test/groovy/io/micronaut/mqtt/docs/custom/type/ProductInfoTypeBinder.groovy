@@ -2,12 +2,12 @@ package io.micronaut.mqtt.docs.custom.type
 
 // tag::imports[]
 import io.micronaut.mqtt.bind.TypedMqttBinder
+import io.micronaut.mqtt.bind.UserProperty
 import io.micronaut.mqtt.v5.bind.MqttV5BindingContext
 import io.micronaut.core.convert.ArgumentConversionContext
 import io.micronaut.core.convert.ConversionService
 import io.micronaut.core.type.Argument
 import jakarta.inject.Singleton
-import org.eclipse.paho.mqttv5.common.packet.UserProperty
 
 import java.util.stream.Collectors
 // end::imports[]
@@ -47,11 +47,11 @@ class ProductInfoTypeBinder implements TypedMqttBinder<MqttV5BindingContext, Pro
         String size = userProperties.get("productSize")
         Optional<Long> count = Optional.ofNullable(userProperties.get("productCount"))
                 .flatMap(value -> conversionService.convert(value, Long.class))
-        Optional<Boolean> sealed = Optional.ofNullable(userProperties.get("productSealed"))
+        Optional<Boolean> sealedOpt = Optional.ofNullable(userProperties.get("productSealed"))
                 .flatMap(value -> conversionService.convert(value, Boolean.class))
 
-        if (count.isPresent() && sealed.isPresent()) {
-            return Optional.of(new ProductInfo(size, count.get(), sealed.get())) // <5>
+        if (count.isPresent() && sealedOpt.isPresent()) {
+            return Optional.of(new ProductInfo(size, count.get(), sealedOpt.get())) // <5>
         } else {
             return Optional.empty()
         }
