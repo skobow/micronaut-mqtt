@@ -21,8 +21,6 @@ import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
 import io.micronaut.mqtt.bind.MqttProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A binding context for MQTT v5 messages.
@@ -32,8 +30,6 @@ import org.slf4j.LoggerFactory;
  */
 @Internal
 public final class MqttV5BindingContext implements MqttBindingContext<MqttMessage> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MqttV5BindingContext.class);
 
     private final Mqtt5AsyncClient client;
     private final MqttMessage message;
@@ -90,10 +86,16 @@ public final class MqttV5BindingContext implements MqttBindingContext<MqttMessag
         this.topic = topic;
     }
 
+    /**
+     * @return The MQTT properties including user defined properties
+     */
     public MqttProperties getProperties() {
         return message.getProperties();
     }
 
+    /**
+     * @param properties The MQTT properties including user defined properties
+     */
     public void setProperties(MqttProperties properties) {
         message.setProperties(properties);
     }
@@ -115,19 +117,17 @@ public final class MqttV5BindingContext implements MqttBindingContext<MqttMessag
         return message;
     }
 
+    /**
+     * @param manualAcks If messages should be acknowledged manually
+     */
     public void setManualAcks(final boolean manualAcks) {
         this.manualAcks = manualAcks;
     }
 
-    public boolean getManalAcks() {
-        return this.manualAcks;
-    }
-
+    /**
+     * @param mqtt5Publish The raw MQTT v5 publish paket
+     */
     public void setMqtt5Publish(final Mqtt5Publish mqtt5Publish) {
         this.mqtt5Publish = mqtt5Publish;
-    }
-
-    public Mqtt5Publish getMqtt5Publish() {
-        return this.mqtt5Publish;
     }
 }

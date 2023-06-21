@@ -88,6 +88,7 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
                 configurationProperties.getManualAcks().ifPresent(context::setManualAcks);
                 callback.accept(context);
+
             }, configurationProperties.getManualAcks().orElse(false))
             .whenComplete((mqtt3SubAck, throwable) -> {
                 if (throwable != null) {

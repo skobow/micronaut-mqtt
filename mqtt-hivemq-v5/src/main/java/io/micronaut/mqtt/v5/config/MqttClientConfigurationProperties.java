@@ -68,8 +68,12 @@ public class MqttClientConfigurationProperties {
     private boolean isHttpsHostnameVerificationEnabled = false;
     private HostnameVerifier sslHostnameVerifier = null;
     private WillMessage willMessage = null;
-    private MqttCertificateConfiguration certificateConfiguration;
+    private final MqttCertificateConfiguration certificateConfiguration;
 
+    /**
+     * @param willMessage An optional last will message
+     * @param certificateConfiguration An optional configuration for SSL certificates
+     */
     public MqttClientConfigurationProperties(
         @Nullable final WillMessage willMessage,
         @Nullable final MqttCertificateConfiguration certificateConfiguration) {
@@ -432,6 +436,9 @@ public class MqttClientConfigurationProperties {
         return certificateConfiguration;
     }
 
+    /**
+     * Configuration for a last will message
+     */
     @ConfigurationProperties("will-message")
     public static class WillMessage {
 

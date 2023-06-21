@@ -96,9 +96,11 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
                 final MqttV5BindingContext context = new MqttV5BindingContext(mqttAsyncClient, mqttMessage);
                 context.setTopic(mqtt5Publish.getTopic().toString());
+                context.setMqtt5Publish(mqtt5Publish);
 
                 configurationProperties.getManualAcks().ifPresent(context::setManualAcks);
                 callback.accept(context);
+
             }, configurationProperties.getManualAcks().orElse(false))
             .whenComplete((mqtt5SubAck, throwable) -> {
                 if (throwable != null) {

@@ -20,8 +20,6 @@ import com.hivemq.client.mqtt.mqtt3.message.publish.Mqtt3Publish;
 import io.micronaut.core.annotation.Internal;
 import io.micronaut.mqtt.bind.MqttBindingContext;
 import io.micronaut.mqtt.bind.MqttMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A binding context for MQTT v3 messages.
@@ -31,8 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 @Internal
 public final class MqttV3BindingContext implements MqttBindingContext<MqttMessage> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(MqttV3BindingContext.class);
 
     private final Mqtt3AsyncClient client;
     private final MqttMessage message;
@@ -106,19 +102,17 @@ public final class MqttV3BindingContext implements MqttBindingContext<MqttMessag
         return message;
     }
 
+    /**
+     * @param manualAcks If messages should be acknowledged manually
+     */
     public void setManualAcks(final boolean manualAcks) {
         this.manualAcks = manualAcks;
     }
 
-    public boolean getManualAcks() {
-        return manualAcks;
-    }
-
+    /**
+     * @param mqtt3Publish The raw MQTT v3 publish paket
+     */
     public void setMqtt3Publish(final Mqtt3Publish mqtt3Publish) {
         this.mqtt3Publish = mqtt3Publish;
-    }
-
-    public Mqtt3Publish getMqtt3Publish() {
-        return mqtt3Publish;
     }
 }

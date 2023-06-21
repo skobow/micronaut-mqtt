@@ -75,13 +75,7 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
             })
             .whenComplete(listener);
 
-        return null; // TODO: what should be returned here?
-
-//        try {
-//            return mqttRxClient.publish(topic, message, null, listener);
-//        } catch (MqttException e) {
-//            throw new MqttClientException("Failed to publish the message", e);
-//        }
+        return null;
     }
 
     @Override
@@ -93,17 +87,6 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
                 onSuccess.run();
             }
         };
-//        return new BiConsumer<Mqtt3Publish, Throwable>() {
-//            @Override
-//            public void onSuccess(IMqttToken asyncActionToken) {
-//                onSuccess.run();
-//            }
-//
-//            @Override
-//            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-//                onError.accept(exception);
-//            }
-//        };
     }
 
     @Override

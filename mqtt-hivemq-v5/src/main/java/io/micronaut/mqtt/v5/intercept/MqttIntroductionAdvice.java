@@ -83,11 +83,6 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
             .whenComplete(listener);
 
         return null;
-//        try {
-//            return mqttAsyncClient.publish(topic, message, null, listener);
-//        } catch (MqttException e) {
-//            throw new MqttClientException("Failed to publish the message", e);
-//        }
     }
 
     @Override
@@ -121,17 +116,6 @@ public class MqttIntroductionAdvice extends AbstractMqttIntroductionAdvice<BiCon
                 onSuccess.run();
             }
         };
-//        return new MqttActionListener() {
-//            @Override
-//            public void onSuccess(IMqttToken asyncActionToken) {
-//                onSuccess.run();
-//            }
-//
-//            @Override
-//            public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-//                onError.accept(exception);
-//            }
-//        };
     }
 
     @Override
