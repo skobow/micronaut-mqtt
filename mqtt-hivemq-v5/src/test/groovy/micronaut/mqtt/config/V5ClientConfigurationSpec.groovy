@@ -34,7 +34,7 @@ class V5ClientConfigurationSpec extends Specification {
     final byte[] PASSWORD = "password".bytes
     final boolean CLEAN_START = false
     final int KEEP_ALIVE_INTERVAL = 5
-    final int MAX_RECONNECT_DELAY = 10
+    final long MAX_RECONNECT_DELAY = 10
     final List<String> SERVER_URIS = ["server1", "server2"]
     final boolean AUTOMATIC_RECONNECT = false
     final Long SESSION_EXPIRY_INTERVAL = 10
@@ -43,7 +43,7 @@ class V5ClientConfigurationSpec extends Specification {
     final Integer TOPIC_ALIAS_MAXIMUM = 2
     final boolean REQUEST_RESPONSE_INFO = false
     final boolean REQUEST_PROBLEM_INFO = false
-    final List<String> USER_PROPERTIES = ["up1", "up2"]
+    final Map<String, String> USER_PROPERTIES = ["up1": "value1", "up2": "value2"]
     final String AUTH_METHOD = "enhanced"
     final byte[] AUTH_DATA = []
     final boolean USE_SUBSCRIPTION_IDENTIFIERS = false

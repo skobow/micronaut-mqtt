@@ -15,6 +15,9 @@
  */
 package io.micronaut.mqtt.v3.config;
 
+import com.hivemq.client.mqtt.MqttClientTransportConfig;
+import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
+import com.hivemq.client.mqtt.mqtt3.message.connect.Mqtt3Connect;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
@@ -37,20 +40,19 @@ public class MqttClientConfigurationProperties {
 
     private String serverUri;
     private String clientId;
-    private Duration connectionTimeout = Duration.ofSeconds(3);
-    private Boolean manualAcks;
-    private byte[] password;
-    private String userName;
-    private int maxReconnectDelay;
-    private int keepAliveInterval;
-    private int maxInflight;
-    private boolean cleanSession;
-    private boolean automaticReconnect;
-    private Map<String, String> customWebSocketHeaders;
-    private boolean isHttpsHostnameVerificationEnabled;
-    private HostnameVerifier sslHostnameVerifier;
-    private WillMessage willMessage;
-    private MqttCertificateConfiguration certificateConfiguration;
+    private Duration connectionTimeout = Duration.ofSeconds(MqttClientTransportConfig.DEFAULT_MQTT_CONNECT_TIMEOUT_MS);
+    private Boolean manualAcks = false;
+    private byte[] password = null;
+    private String userName = null;
+    private Long maxReconnectDelay = MqttClientAutoReconnect.DEFAULT_MAX_DELAY_S;
+    private Integer keepAliveInterval = Mqtt3Connect.DEFAULT_KEEP_ALIVE;
+    private boolean cleanSession = Mqtt3Connect.DEFAULT_CLEAN_SESSION;
+    private boolean automaticReconnect = false;
+    private Map<String, String> customWebSocketHeaders = null;
+    private boolean isHttpsHostnameVerificationEnabled = false;
+    private HostnameVerifier sslHostnameVerifier = null;
+    private WillMessage willMessage = null;
+    final private MqttCertificateConfiguration certificateConfiguration;
 
     public MqttClientConfigurationProperties(
         @Nullable final WillMessage willMessage,
@@ -72,7 +74,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param serverUri The server URI
      */
-    public void setServerUri(String serverUri) {
+    public void setServerUri(final String serverUri) {
         this.serverUri = serverUri;
     }
 
@@ -87,7 +89,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param clientId The client ID
      */
-    public void setClientId(String clientId) {
+    public void setClientId(final String clientId) {
         this.clientId = clientId;
     }
 
@@ -101,7 +103,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param connectionTimeout How long to wait for a connection
      */
-    public void setConnectionTimeout(Duration connectionTimeout) {
+    public void setConnectionTimeout(final Duration connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
 
@@ -115,7 +117,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param manualAcks Set to true if you wish to manually acknowledge messages
      */
-    public void setManualAcks(Boolean manualAcks) {
+    public void setManualAcks(final Boolean manualAcks) {
         this.manualAcks = manualAcks;
     }
 
@@ -150,43 +152,29 @@ public class MqttClientConfigurationProperties {
     /**
      * @return The maximal delay for reconnecting.
      */
-    public int getMaxReconnectDelay() {
+    public Long getMaxReconnectDelay() {
         return maxReconnectDelay;
     }
 
     /**
      * @param maxReconnectDelay The maximum delay for reconnecting.
      */
-    public void setMaxReconnectDelay(final int maxReconnectDelay) {
+    public void setMaxReconnectDelay(final Long maxReconnectDelay) {
         this.maxReconnectDelay = maxReconnectDelay;
     }
 
     /**
      * @return The keep alive interval.
      */
-    public int getKeepAliveInterval() {
+    public Integer getKeepAliveInterval() {
         return keepAliveInterval;
     }
 
     /**
      * @param keepAliveInterval The keep alive interval.
      */
-    public void setKeepAliveInterval(final int keepAliveInterval) {
+    public void setKeepAliveInterval(final Integer keepAliveInterval) {
         this.keepAliveInterval = keepAliveInterval;
-    }
-
-    /**
-     * @return The maximal inflight.
-     */
-    public int getMaxInflight() {
-        return maxInflight;
-    }
-
-    /**
-     * @param maxInflight The maximal inflight.
-     */
-    public void setMaxInflight(final int maxInflight) {
-        this.maxInflight = maxInflight;
     }
 
     /**
@@ -274,7 +262,7 @@ public class MqttClientConfigurationProperties {
     }
 
     @ConfigurationProperties("will-message")
-    static class WillMessage {
+    public static class WillMessage {
 
         private String topic;
         private byte[] payload;

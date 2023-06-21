@@ -16,29 +16,28 @@
 package io.micronaut.mqtt.v5.client;
 
 import com.hivemq.client.mqtt.*;
+import com.hivemq.client.mqtt.datatypes.MqttQos;
+import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5ClientBuilder;
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserProperties;
+import com.hivemq.client.mqtt.mqtt5.datatypes.Mqtt5UserPropertiesBuilder;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectBuilder;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
 import io.micronaut.context.annotation.Bean;
 import io.micronaut.context.annotation.Factory;
+import io.micronaut.context.exceptions.BeanInstantiationException;
+import io.micronaut.core.util.StringUtils;
 import io.micronaut.mqtt.exception.MqttClientException;
-import io.micronaut.mqtt.ssl.CertificateReader;
-import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
-import io.micronaut.mqtt.ssl.PrivateKeyReader;
+import io.micronaut.mqtt.ssl.*;
 import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties;
-import io.micronaut.scheduling.TaskExecutors;
-import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.IOException;
 import java.net.URI;
-import java.security.*;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -49,33 +48,108 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0
  */
 @Factory
-public final class MqttClientFactory {
+public final class MqttClientFactory implements KeyManagerFactoryProvider, TrustManagerFactoryProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttClientFactory.class);
 
     @Singleton
     @Bean(preDestroy = "disconnect")
-    Mqtt5AsyncClient mqttClient(final MqttClientConfigurationProperties configuration,
-                                @Named(TaskExecutors.MESSAGE_CONSUMER) final ExecutorService executorService) {
-        final ScheduledExecutorService consumerExecutor = (ScheduledExecutorService) executorService;
+    Mqtt5AsyncClient mqttClient(final MqttClientConfigurationProperties configuration) {
 
+        final Mqtt5ClientBuilder clientBuilder = MqttClient.builder()
+            .useMqttVersion5()
+            .identifier(configuration.getClientId())
+            .transportConfig(buildTransportConfig(configuration));
+
+        if (configuration.isAutomaticReconnect()) {
+            clientBuilder.automaticReconnect()
+                .initialDelay(MqttClientAutoReconnect.DEFAULT_START_DELAY_S, TimeUnit.SECONDS)
+                .maxDelay(configuration.getMaxReconnectDelay(), TimeUnit.SECONDS)
+                .applyAutomaticReconnect();
+        }
+
+        final Mqtt5ConnectBuilder connectBuilder = Mqtt5Connect.builder()
+            .cleanStart(configuration.isCleanStart())
+            .keepAlive(configuration.getKeepAliveInterval())
+            .sessionExpiryInterval(configuration.getSessionExpiryInterval())
+            .restrictions(Mqtt5ConnectRestrictions.builder()
+                .receiveMaximum(configuration.getReceiveMaximum())
+                .maximumPacketSize(configuration.getMaximumPacketSize())
+                .topicAliasMaximum(configuration.getTopicAliasMaximum())
+                .requestResponseInformation(configuration.isRequestResponseInfo())
+                .requestProblemInformation(configuration.isRequestProblemInfo())
+                .build());
+
+            if (configuration.getUserProperties() != null && configuration.getUserProperties().size() > 0) {
+                connectBuilder.userProperties(buildUserProperties(configuration));
+            }
+
+        // enhanced authentication
+
+        if (StringUtils.isNotEmpty(configuration.getUserName())) {
+            connectBuilder.simpleAuth()
+                .username(configuration.getUserName())
+                .password(configuration.getPassword())
+                .applySimpleAuth();
+        }
+
+        if (configuration.getWillMessage() != null) {
+            var willMessage = configuration.getWillMessage();
+
+            connectBuilder.willPublish()
+                .topic(willMessage.getTopic())
+                .payload(willMessage.getPayload())
+                .qos(Objects.requireNonNull(MqttQos.fromCode(willMessage.getQos())))
+                .retain(willMessage.isRetained());
+        }
+
+        final var client = clientBuilder.buildAsync();
+
+        client
+            .connect(connectBuilder.build())
+            .whenComplete((mqtt3ConnAck, throwable) -> {
+                if (throwable != null) {
+                    throw new MqttClientException("Error connecting mqtt client");
+                }
+            }).join();
+
+        return client;
+    }
+
+    private Mqtt5UserProperties buildUserProperties(final MqttClientConfigurationProperties configuration) {
+        final Mqtt5UserPropertiesBuilder propertiesBuilder = Mqtt5UserProperties.builder();
+        configuration.getUserProperties().forEach(propertiesBuilder::add);
+
+        return propertiesBuilder.build();
+    }
+
+    private MqttClientTransportConfig buildTransportConfig(final MqttClientConfigurationProperties configuration) {
         final URI serverUri = URI.create(configuration.getServerUri());
         if (LOG.isTraceEnabled()) {
             LOG.trace("Connecting to {} on port {}", serverUri.getHost(), serverUri.getPort());
         }
 
         final MqttClientTransportConfigBuilder transportConfigBuilder = MqttClientTransportConfig.builder()
-            .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS)
             .serverHost(serverUri.getHost())
-            .serverPort(serverUri.getPort());
+            .serverPort(serverUri.getPort())
+            .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS);
 
-        if ("ssl".equals(serverUri.getScheme())) {
+        if (configuration.getCertificateConfiguration() != null && "ssl".equals(serverUri.getScheme())) {
             final MqttCertificateConfiguration certConfiguration = configuration.getCertificateConfiguration();
-
             final MqttClientSslConfigBuilder sslConfigBuilder = MqttClientSslConfig.builder();
+            if (configuration.isHttpsHostnameVerificationEnabled()) {
+                sslConfigBuilder.hostnameVerifier(configuration.getSSLHostnameVerifier());
+            }
 
-            sslConfigBuilder.keyManagerFactory(buildKeyManagerFactory(certConfiguration));
-            sslConfigBuilder.trustManagerFactory(buildTrustManagerFactory(certConfiguration));
+            try {
+                sslConfigBuilder
+                    .keyManagerFactory(getKeyManagerFactory(certConfiguration))
+                    .trustManagerFactory(getTrustManagerFactory(certConfiguration));
+
+            } catch (KeyManagerFactoryCreationException | TrustManagerFactoryCreationException e) {
+                LOG.error(e.getMessage(), e);
+                throw new BeanInstantiationException(e.getMessage(), e);
+            }
 
             if (configuration.isHttpsHostnameVerificationEnabled()) {
                 sslConfigBuilder.hostnameVerifier(configuration.getSSLHostnameVerifier());
@@ -84,65 +158,6 @@ public final class MqttClientFactory {
             transportConfigBuilder.sslConfig(sslConfigBuilder.build());
         }
 
-        final Mqtt5AsyncClient client = MqttClient.builder()
-            .executorConfig(MqttClientExecutorConfig.builder().nettyExecutor(consumerExecutor).build())
-            .useMqttVersion5()
-            .identifier(configuration.getClientId())
-            .transportConfig(transportConfigBuilder.build())
-            .buildAsync();
-
-        client.connect()
-            .whenComplete((mqtt3ConnAck, throwable) -> {
-                if (throwable != null) {
-                    throw new MqttClientException("Error connecting mqtt client");
-                }
-            })
-            .join();
-
-        return client;
-    }
-
-    private KeyManagerFactory buildKeyManagerFactory(final MqttCertificateConfiguration certConfiguration) {
-        try {
-            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-
-            final Certificate certificate = CertificateReader.readCertificate(certConfiguration.getCertificate());
-
-            final PrivateKey key = PrivateKeyReader.getPrivateKey(certConfiguration.getPrivateKey(), certConfiguration.getPassword());
-
-            keyStore.load(null, null);
-            keyStore.setCertificateEntry("certificate", certificate);
-            keyStore.setKeyEntry("private-key", key, certConfiguration.getPassword(), new Certificate[]{certificate});
-
-            kmf.init(keyStore, certConfiguration.getPassword());
-
-            return kmf;
-        } catch (NoSuchAlgorithmException | KeyStoreException | IOException | CertificateException |
-                 UnrecoverableKeyException e) {
-            LOG.error("Error creating KeyManagerFactory: {}", e.getMessage(), e);
-        }
-
-        return null;
-    }
-
-    private TrustManagerFactory buildTrustManagerFactory(final MqttCertificateConfiguration certConfiguration) {
-        try {
-            final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-
-            final Certificate certificate = CertificateReader.readCertificate(certConfiguration.getCertificateAuthority());
-
-            keyStore.load(null);
-            keyStore.setCertificateEntry("ca-certificate", certificate);
-
-            tmf.init(keyStore);
-
-            return tmf;
-        } catch (NoSuchAlgorithmException | KeyStoreException | IOException | CertificateException e) {
-            LOG.error("Error creating TrustManagerFactory: {}", e.getMessage(), e);
-        }
-
-        return null;
+        return transportConfigBuilder.build();
     }
 }

@@ -15,6 +15,10 @@
  */
 package io.micronaut.mqtt.v5.config;
 
+import com.hivemq.client.mqtt.MqttClientTransportConfig;
+import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5ConnectRestrictions;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.annotation.Nullable;
 import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
@@ -22,7 +26,6 @@ import jakarta.validation.constraints.NotNull;
 
 import javax.net.ssl.HostnameVerifier;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,29 +41,33 @@ public class MqttClientConfigurationProperties {
 
     private String serverUri;
     private String clientId;
-    private Duration connectionTimeout = Duration.ofSeconds(3);
-    private Boolean manualAcks;
-    private String userName;
-    private byte[] password;
-    private boolean cleanStart;
-    private int keepAliveInterval;
-    private int maxReconnectDelay;
-    private boolean automaticReconnect;
-    private Long sessionExpiryInterval;
-    private Integer receiveMaximum;
-    private Long maximumPacketSize;
-    private Integer topicAliasMaximum;
-    private boolean requestResponseInfo;
-    private boolean requestProblemInfo;
-    private List<String> userProperties;
+    private Duration connectionTimeout = Duration.ofMillis(MqttClientTransportConfig.DEFAULT_MQTT_CONNECT_TIMEOUT_MS);
+    private Boolean manualAcks = false;
+    private String userName = null;
+    private byte[] password = null;
+    private boolean cleanStart = Mqtt5Connect.DEFAULT_CLEAN_START;
+    private Integer keepAliveInterval = Mqtt5Connect.DEFAULT_KEEP_ALIVE;
+    private Long maxReconnectDelay = MqttClientAutoReconnect.DEFAULT_MAX_DELAY_S;
+    private boolean automaticReconnect = false;
+    private Long sessionExpiryInterval = Mqtt5Connect.DEFAULT_SESSION_EXPIRY_INTERVAL;
+    private Integer receiveMaximum = Mqtt5ConnectRestrictions.DEFAULT_RECEIVE_MAXIMUM;
+    private Integer maximumPacketSize = Mqtt5ConnectRestrictions.DEFAULT_MAXIMUM_PACKET_SIZE;
+    private Integer topicAliasMaximum = Mqtt5ConnectRestrictions.DEFAULT_TOPIC_ALIAS_MAXIMUM;
+    private boolean requestResponseInfo = Mqtt5ConnectRestrictions.DEFAULT_REQUEST_RESPONSE_INFORMATION;
+    private boolean requestProblemInfo = Mqtt5ConnectRestrictions.DEFAULT_REQUEST_PROBLEM_INFORMATION;
+    private Map<String, String> userProperties;
+    @Deprecated
     private String authMethod;
+    @Deprecated
     private byte[] authData;
+    @Deprecated
     private boolean useSubscriptionIdentifiers;
-    private Map<String, String> customWebSocketHeaders;
+    private Map<String, String> customWebSocketHeaders = null;
+    @Deprecated
     private boolean sendReasonMessages;
-    private boolean isHttpsHostnameVerificationEnabled;
-    private HostnameVerifier sslHostnameVerifier;
-    private WillMessage willMessage;
+    private boolean isHttpsHostnameVerificationEnabled = false;
+    private HostnameVerifier sslHostnameVerifier = null;
+    private WillMessage willMessage = null;
     private MqttCertificateConfiguration certificateConfiguration;
 
     public MqttClientConfigurationProperties(
@@ -84,7 +91,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param serverUri The server URI
      */
-    public void setServerUri(String serverUri) {
+    public void setServerUri(final String serverUri) {
         this.serverUri = serverUri;
     }
 
@@ -99,7 +106,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param clientId The client ID
      */
-    public void setClientId(String clientId) {
+    public void setClientId(final String clientId) {
         this.clientId = clientId;
     }
 
@@ -113,7 +120,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param connectionTimeout How long to wait for a connection
      */
-    public void setConnectionTimeout(Duration connectionTimeout) {
+    public void setConnectionTimeout(final Duration connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
     }
 
@@ -127,7 +134,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param manualAcks Set to true if you wish to manually acknowledge messages
      */
-    public void setManualAcks(Boolean manualAcks) {
+    public void setManualAcks(final Boolean manualAcks) {
         this.manualAcks = manualAcks;
     }
 
@@ -176,28 +183,28 @@ public class MqttClientConfigurationProperties {
     /**
      * @return The keep alive interval.
      */
-    public int getKeepAliveInterval() {
+    public Integer getKeepAliveInterval() {
         return this.keepAliveInterval;
     }
 
     /**
      * @param keepAliveInterval The keep alive interval.
      */
-    public void setKeepAliveInterval(final int keepAliveInterval) {
+    public void setKeepAliveInterval(final Integer keepAliveInterval) {
         this.keepAliveInterval = keepAliveInterval;
     }
 
     /**
      * @return The maximal delay for reconnecting.
      */
-    public int getMaxReconnectDelay() {
+    public Long getMaxReconnectDelay() {
         return this.maxReconnectDelay;
     }
 
     /**
      * @param maxReconnectDelay The maximum delay for reconnecting.
      */
-    public void setMaxReconnectDelay(final int maxReconnectDelay) {
+    public void setMaxReconnectDelay(final Long maxReconnectDelay) {
         this.maxReconnectDelay = maxReconnectDelay;
     }
 
@@ -246,14 +253,14 @@ public class MqttClientConfigurationProperties {
     /**
      * @return The maximum paket size.
      */
-    public Long getMaximumPacketSize() {
+    public Integer getMaximumPacketSize() {
         return this.maximumPacketSize;
     }
 
     /**
      * @param maximumPacketSize The maximum paket size.
      */
-    public void setMaximumPacketSize(final Long maximumPacketSize) {
+    public void setMaximumPacketSize(final Integer maximumPacketSize) {
         this.maximumPacketSize = maximumPacketSize;
     }
 
@@ -302,14 +309,14 @@ public class MqttClientConfigurationProperties {
     /**
      * @return The user defined properties.
      */
-    public List<String> getUserProperties() {
+    public Map<String, String> getUserProperties() {
         return this.userProperties;
     }
 
     /**
      * @param userProperties The user defined properties.
      */
-    public void setUserProperties(final List<String> userProperties) {
+    public void setUserProperties(final Map<String, String> userProperties) {
         this.userProperties = userProperties;
     }
 
@@ -426,7 +433,7 @@ public class MqttClientConfigurationProperties {
     }
 
     @ConfigurationProperties("will-message")
-    static class WillMessage {
+    public static class WillMessage {
 
         private String topic;
         private byte[] payload;
