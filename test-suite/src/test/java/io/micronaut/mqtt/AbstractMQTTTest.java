@@ -29,7 +29,8 @@ public abstract class AbstractMQTTTest {
 
     protected Map<String, Object> getConfiguration() {
         Map<String, Object> config = new HashMap<>();
-        config.put("mqtt.client.server-uri", "tcp://localhost:" + mqttContainer.getMappedPort(1883));
+        config.put("mqtt.client.server-host", "localhost");
+        config.put("mqtt.client.server-port", mqttContainer.getMappedPort(1883));
         config.put("mqtt.client.client-id", UUID.randomUUID().toString());
         config.put("spec.name", this.getClass().getSimpleName());
         return config;

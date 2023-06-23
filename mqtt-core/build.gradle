@@ -10,5 +10,6 @@ dependencies {
     implementation(mn.micronaut.retry)
     implementation(mnSerde.micronaut.serde.jackson)
     implementation(mn.reactor)
+    implementation(libs.managed.hivemq.client)
     compileOnly(libs.kotlin.stdlib.jdk8)
 }

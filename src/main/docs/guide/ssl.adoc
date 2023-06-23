@@ -4,7 +4,7 @@ dependency:micronaut-mqtt-ssl[groupId="io.micronaut.mqtt"]
 
 After adding the dependency, you must configure the client with the appropriate certificate authority, certificate, key, and password.
 
-include::{includedir}configurationProperties/io.micronaut.mqtt.ssl.MqttCertificateConfiguration.adoc[]
+include::{includedir}configurationProperties/io.micronaut.mqtt.ssl.MqttSslConfiguration.adoc[]
 
 NOTE: The files can be configured with the `file:` prefix to reference absolute paths on the file system or `classpath:` to reference files on the classpath.
 

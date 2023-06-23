@@ -28,12 +28,11 @@ import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.ssl.*;
-import io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties;
+import io.micronaut.mqtt.v3.config.Mqtt3ClientConfigurationProperties;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -51,7 +50,7 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
 
     @Singleton
     @Bean(preDestroy = "disconnect")
-    Mqtt3AsyncClient mqttClient(MqttClientConfigurationProperties configuration) {
+    Mqtt3AsyncClient mqttClient(Mqtt3ClientConfigurationProperties configuration) {
 
         final Mqtt3ClientBuilder clientBuilder = MqttClient.builder()
             .useMqttVersion3()
@@ -88,6 +87,10 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
 
         final var client = clientBuilder.buildAsync();
 
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
+        }
+
         client.connect(connectBuilder.build())
             .whenComplete((mqtt3ConnAck, throwable) -> {
                 if (throwable != null) {
@@ -99,28 +102,26 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
         return client;
     }
 
-    private MqttClientTransportConfig buildTransportConfig(final MqttClientConfigurationProperties configuration) {
-        final URI serverUri = URI.create(configuration.getServerUri());
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Connecting to {} on port {}", serverUri.getHost(), serverUri.getPort());
-        }
+    private MqttClientTransportConfig buildTransportConfig(final Mqtt3ClientConfigurationProperties configuration) {
 
         final MqttClientTransportConfigBuilder transportConfigBuilder = MqttClientTransportConfig.builder()
-            .serverHost(serverUri.getHost())
-            .serverPort(serverUri.getPort())
+            .serverHost(configuration.getServerHost())
+            .serverPort(configuration.getServerPort())
             .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS);
 
-        if (configuration.getCertificateConfiguration() != null && "ssl".equals(serverUri.getScheme())) {
-            final MqttCertificateConfiguration certConfiguration = configuration.getCertificateConfiguration();
+        if (configuration.getSslConfiguration() != null && configuration.getSslConfiguration().isEnabled()) {
+            final MqttSslConfiguration sslConfiguration = configuration.getSslConfiguration();
             final MqttClientSslConfigBuilder sslConfigBuilder = MqttClientSslConfig.builder();
             if (configuration.isHttpsHostnameVerificationEnabled()) {
                 sslConfigBuilder.hostnameVerifier(configuration.getSSLHostnameVerifier());
             }
 
             try {
-                sslConfigBuilder
-                    .keyManagerFactory(getKeyManagerFactory(certConfiguration))
-                    .trustManagerFactory(getTrustManagerFactory(certConfiguration));
+                sslConfigBuilder.trustManagerFactory(getTrustManagerFactory(sslConfiguration));
+
+                if (sslConfiguration.getCertificate() != null) {
+                    sslConfigBuilder.keyManagerFactory(getKeyManagerFactory(sslConfiguration));
+                }
 
             } catch (KeyManagerFactoryCreationException | TrustManagerFactoryCreationException e) {
                 LOG.error(e.getMessage(), e);

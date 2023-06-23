@@ -43,12 +43,14 @@ abstract class AbstractMQTTTest extends Specification {
 
     protected ApplicationContext startContext(Map additionalConfig = [:]) {
         ApplicationContext.run(
-                ["mqtt.client.server-uri": "ssl://localhost:${mqttContainer.getMappedPort(8883)}",
-                 "mqtt.client.client-id": UUID.randomUUID().toString(),
+                ["mqtt.client.server-host"              : "localhost",
+                 "mqtt.client.server-port"              : mqttContainer.getMappedPort(8883),
+                 "mqtt.client.client-id"                : UUID.randomUUID().toString(),
+                 "mqtt.client.ssl.enabled"              : true,
                  "mqtt.client.ssl.certificate-authority": "classpath:certs/ca-cert.pem",
-                 "mqtt.client.ssl.certificate": "classpath:certs/client-cert.pem",
-                 "mqtt.client.ssl.private-key": "classpath:certs/client-key.pem",
-                 "mqtt.client.ssl.password": "test",
-                 "spec.name": getClass().simpleName] << additionalConfig, "test")
+                 "mqtt.client.ssl.certificate"          : "classpath:certs/client-cert.pem",
+                 "mqtt.client.ssl.private-key"          : "classpath:certs/client-key.pem",
+                 "mqtt.client.ssl.password"             : "test",
+                 "spec.name"                            : getClass().simpleName] << additionalConfig, "test")
     }
 }

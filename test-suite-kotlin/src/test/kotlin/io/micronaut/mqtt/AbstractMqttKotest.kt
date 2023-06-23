@@ -6,15 +6,17 @@ import org.testcontainers.containers.BindMode
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy
 import java.util.*
 
-abstract class AbstractMqttKotest(body: BehaviorSpec.() -> Unit = {}): BehaviorSpec(body) {
+abstract class AbstractMqttKotest(body: BehaviorSpec.() -> Unit = {}) : BehaviorSpec(body) {
 
     companion object {
         val mqttContainer = KGenericContainer("eclipse-mosquitto:1.6.12")
-                .withExposedPorts(1883)
-                .waitingFor(LogMessageWaitStrategy().withRegEx("(?s).*mosquitto version 1.6.12 running.*"))
-                .withClasspathResourceMapping("mosquitto.conf",
-                        "/mosquitto/config/mosquitto.conf",
-                        BindMode.READ_ONLY)!!
+            .withExposedPorts(1883)
+            .waitingFor(LogMessageWaitStrategy().withRegEx("(?s).*mosquitto version 1.6.12 running.*"))
+            .withClasspathResourceMapping(
+                "mosquitto.conf",
+                "/mosquitto/config/mosquitto.conf",
+                BindMode.READ_ONLY
+            )!!
 
         init {
             mqttContainer.start()
@@ -30,9 +32,11 @@ abstract class AbstractMqttKotest(body: BehaviorSpec.() -> Unit = {}): BehaviorS
 
         fun getDefaultConfig(specName: String): MutableMap<String, Any> {
             return mutableMapOf(
-                    "mqtt.client.server-uri" to "tcp://localhost:${mqttContainer.getMappedPort(1883)}",
-                    "mqtt.client.client-id" to UUID.randomUUID().toString(),
-                    "spec.name" to specName)
+                "mqtt.client.server-host" to "localhost",
+                "mqtt.client.server-port" to mqttContainer.getMappedPort(1883),
+                "mqtt.client.client-id" to UUID.randomUUID().toString(),
+                "spec.name" to specName
+            )
         }
     }
 

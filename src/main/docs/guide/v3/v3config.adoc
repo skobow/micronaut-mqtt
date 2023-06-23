@@ -2,7 +2,7 @@ All properties on the link:{apimqttv3}org/eclipse/paho/client/mqttv3/MqttConnect
 
 The properties that can be converted from the string values in a configuration file can be configured directly.
 
-include::{includedir}configurationProperties/io.micronaut.mqtt.v3.config.MqttClientConfigurationProperties.adoc[]
+include::{includedir}configurationProperties/io.micronaut.mqtt.v3.config.Mqtt3ClientConfigurationProperties.adoc[]
 
 NOTE: Without any configuration the defaults in the link:{apimqttv3}org/eclipse/paho/client/mqttv3/MqttConnectOptions.html[MqttConnectOptions] will be used.
 

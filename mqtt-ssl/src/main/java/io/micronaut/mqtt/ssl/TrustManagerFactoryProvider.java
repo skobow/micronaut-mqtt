@@ -24,7 +24,7 @@ import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 
 public interface TrustManagerFactoryProvider {
-    default TrustManagerFactory getTrustManagerFactory(final MqttCertificateConfiguration certConfiguration) throws TrustManagerFactoryCreationException {
+    default TrustManagerFactory getTrustManagerFactory(final MqttSslConfiguration certConfiguration) throws TrustManagerFactoryCreationException {
         try {
             final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());

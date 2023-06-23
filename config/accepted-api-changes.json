@@ -153,5 +153,80 @@
     "type": "io.micronaut.mqtt.v5.annotation.MqttPublisher",
     "member": "Implemented interface java.lang.annotation.Annotation",
     "reason": "Moved to core for Micronaut 4.0.0"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Field $ANNOTATION_METADATA",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Constructor io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference()",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Implemented interface io.micronaut.core.annotation.AnnotationSource",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanContextConditional",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Implemented interface io.micronaut.core.annotation.AnnotationMetadataProvider",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanType",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttCertificateConfiguration$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanDefinitionReference",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.MqttCertificateConfiguration",
+    "member": "Constructor io.micronaut.mqtt.ssl.MqttCertificateConfiguration()",
+    "reason": "Migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Field $ANNOTATION_METADATA",
+    "reason": "Provide a human readable reason for the change"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Constructor io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference()",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Implemented interface io.micronaut.core.annotation.AnnotationSource",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanContextConditional",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Implemented interface io.micronaut.core.annotation.AnnotationMetadataProvider",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanType",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
+  },
+  {
+    "type": "io.micronaut.mqtt.ssl.$MqttConfigurationEventListener$Definition$Reference",
+    "member": "Implemented interface io.micronaut.inject.BeanDefinitionReference",
+    "reason": "Not needed anymore due to migration to HiveMQ MQTT client"
   }
 ]

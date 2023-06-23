@@ -4,11 +4,11 @@
 [![Build Status](https://github.com/micronaut-projects/micronaut-mqtt/workflows/Java%20CI/badge.svg)](https://github.com/micronaut-projects/micronaut-mqtt/actions)
 [![Revved up by Gradle Enterprise](https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A)](https://ge.micronaut.io/scans)
 
-Micronaut MQTT integrations Micronaut with the [Eclipse Paho](https://www.eclipse.org/paho/) MQTT messaging client.
+Micronaut MQTT integrations Micronaut with the [HiveMQ](https://hivemq.github.io/hivemq-mqtt-client/) MQTT client.
 
 ## Documentation
 
-See the [Documentation](https://micronaut-projects.github.io/micronaut-mqtt/1.0.x/guide/) for more information. 
+See the [Documentation](https://micronaut-projects.github.io/micronaut-mqtt/1.0.x/guide/) for more information.
 
 See the [Snapshot Documentation](https://micronaut-projects.github.io/micronaut-mqtt/snapshot/guide/) for the current development docs.
 

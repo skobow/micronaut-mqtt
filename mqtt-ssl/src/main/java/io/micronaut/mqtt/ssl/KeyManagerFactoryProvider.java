@@ -23,7 +23,7 @@ import java.security.cert.CertificateException;
 
 public interface KeyManagerFactoryProvider {
 
-    default KeyManagerFactory getKeyManagerFactory(final MqttCertificateConfiguration certConfiguration) throws KeyManagerFactoryCreationException {
+    default KeyManagerFactory getKeyManagerFactory(final MqttSslConfiguration certConfiguration) throws KeyManagerFactoryCreationException {
         try {
             final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             final KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());

@@ -31,12 +31,11 @@ import io.micronaut.context.exceptions.BeanInstantiationException;
 import io.micronaut.core.util.StringUtils;
 import io.micronaut.mqtt.exception.MqttClientException;
 import io.micronaut.mqtt.ssl.*;
-import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties;
+import io.micronaut.mqtt.v5.config.Mqtt5ClientConfigurationProperties;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +53,7 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
 
     @Singleton
     @Bean(preDestroy = "disconnect")
-    Mqtt5AsyncClient mqttClient(final MqttClientConfigurationProperties configuration) {
+    Mqtt5AsyncClient mqttClient(final Mqtt5ClientConfigurationProperties configuration) {
 
         final Mqtt5ClientBuilder clientBuilder = MqttClient.builder()
             .useMqttVersion5()
@@ -105,6 +104,10 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
 
         final var client = clientBuilder.buildAsync();
 
+        if (LOG.isTraceEnabled()) {
+            LOG.trace("Connecting to {} on port {}", configuration.getServerHost(), configuration.getServerPort());
+        }
+
         client
             .connect(connectBuilder.build())
             .whenComplete((mqtt3ConnAck, throwable) -> {
@@ -116,26 +119,22 @@ public final class MqttClientFactory implements KeyManagerFactoryProvider, Trust
         return client;
     }
 
-    private Mqtt5UserProperties buildUserProperties(final MqttClientConfigurationProperties configuration) {
+    private Mqtt5UserProperties buildUserProperties(final Mqtt5ClientConfigurationProperties configuration) {
         final Mqtt5UserPropertiesBuilder propertiesBuilder = Mqtt5UserProperties.builder();
         configuration.getUserProperties().forEach(propertiesBuilder::add);
 
         return propertiesBuilder.build();
     }
 
-    private MqttClientTransportConfig buildTransportConfig(final MqttClientConfigurationProperties configuration) {
-        final URI serverUri = URI.create(configuration.getServerUri());
-        if (LOG.isTraceEnabled()) {
-            LOG.trace("Connecting to {} on port {}", serverUri.getHost(), serverUri.getPort());
-        }
+    private MqttClientTransportConfig buildTransportConfig(final Mqtt5ClientConfigurationProperties configuration) {
 
         final MqttClientTransportConfigBuilder transportConfigBuilder = MqttClientTransportConfig.builder()
-            .serverHost(serverUri.getHost())
-            .serverPort(serverUri.getPort())
+            .serverHost(configuration.getServerHost())
+            .serverPort(configuration.getServerPort())
             .mqttConnectTimeout(configuration.getConnectionTimeout().toMillis(), TimeUnit.MILLISECONDS);
 
-        if (configuration.getCertificateConfiguration() != null && "ssl".equals(serverUri.getScheme())) {
-            final MqttCertificateConfiguration certConfiguration = configuration.getCertificateConfiguration();
+        if (configuration.getSslConfiguration() != null && configuration.getSslConfiguration().isEnabled()) {
+            final MqttSslConfiguration certConfiguration = configuration.getSslConfiguration();
             final MqttClientSslConfigBuilder sslConfigBuilder = MqttClientSslConfig.builder();
             if (configuration.isHttpsHostnameVerificationEnabled()) {
                 sslConfigBuilder.hostnameVerifier(configuration.getSSLHostnameVerifier());

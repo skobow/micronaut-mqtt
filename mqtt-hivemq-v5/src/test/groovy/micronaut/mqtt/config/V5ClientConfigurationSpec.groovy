@@ -1,8 +1,8 @@
 package micronaut.mqtt.config
 
 import io.micronaut.context.ApplicationContext
-import io.micronaut.mqtt.test.AbstractMQTTTest
-import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties
+import io.micronaut.core.io.Readable
+import io.micronaut.mqtt.v5.config.Mqtt5ClientConfigurationProperties
 import spock.lang.Specification
 
 import javax.net.ssl.HostnameVerifier
@@ -26,7 +26,8 @@ import java.time.Duration
 
 class V5ClientConfigurationSpec extends Specification {
 
-    final String SERVER_URI = "tcp://localhost:1883"
+    final String SERVER_HOST = "localhost"
+    final Integer SERVER_PORT = 1883
     final String CLIENT_ID = "client-id"
     final Duration CONNECTION_TIMEOUT = Duration.ofMillis(1000)
     final boolean MANUAL_ACKS = false
@@ -52,22 +53,24 @@ class V5ClientConfigurationSpec extends Specification {
     final boolean HOSTNAME_VERIFICATION_ENABLED = false
     final HostnameVerifier HOSTNAME_VERIFIER = null
 
-    final String SSL_CERTIFICATE_AUTHORITY = null
-    final String SSL_CERTIFICATE = null
-    final String SSL_PRIVATE_KEY = null
+    final boolean SSL_ENABLED = false
+    final Readable SSL_CERTIFICATE_AUTHORITY = null
+    final Readable SSL_CERTIFICATE = null
+    final Readable SSL_PRIVATE_KEY = null
     final char[] SSL_PASSWORD = "password".bytes
 
     void "test client configuration"() {
         ApplicationContext applicationContext = startContext()
 
         when:
-        def config = applicationContext.getBean(MqttClientConfigurationProperties)
+        def config = applicationContext.getBean(Mqtt5ClientConfigurationProperties)
 
         then:
-        config.serverUri == SERVER_URI
+        config.serverHost == SERVER_HOST
+        config.serverPort == SERVER_PORT
         config.clientId == CLIENT_ID
         config.connectionTimeout == CONNECTION_TIMEOUT
-        config.manualAcks == Optional.of(MANUAL_ACKS)
+        config.manualAcks == MANUAL_ACKS
         config.userName == USER_NAME
         config.password == PASSWORD
         config.cleanStart == CLEAN_START
@@ -89,14 +92,15 @@ class V5ClientConfigurationSpec extends Specification {
 
         // SSL configuration properties
         config.httpsHostnameVerificationEnabled == HOSTNAME_VERIFICATION_ENABLED
-//        config.SSLHostnameVerifier == HOSTNAME_VERIFIER
+        config.SSLHostnameVerifier == HOSTNAME_VERIFIER
 
-        def sslConfig = config.getCertificateConfiguration()
-        sslConfig == null
-//        sslConfig.certificateAuthority == SSL_CERTIFICATE_AUTHORITY
-//        sslConfig.certificate == SSL_CERTIFICATE
-//        sslConfig.privateKey == SSL_PRIVATE_KEY
-//        sslConfig.password == SSL_PASSWORD
+        def sslConfig = config.getSslConfiguration()
+        sslConfig != null
+        !sslConfig.enabled
+        sslConfig.certificateAuthority == SSL_CERTIFICATE_AUTHORITY
+        sslConfig.certificate == SSL_CERTIFICATE
+        sslConfig.privateKey == SSL_PRIVATE_KEY
+        sslConfig.password == SSL_PASSWORD
 
         cleanup:
         applicationContext.close()
@@ -105,7 +109,8 @@ class V5ClientConfigurationSpec extends Specification {
     ApplicationContext startContext() {
         ApplicationContext.run(
                 [
-                        "mqtt.client.server-uri"                         : SERVER_URI,
+                        "mqtt.client.server-host"                        : SERVER_HOST,
+                        "mqtt.client.server-port"                        : SERVER_PORT,
                         "mqtt.client.client-id"                          : CLIENT_ID,
                         "mqtt.client.connection-timeout"                 : CONNECTION_TIMEOUT,
                         "mqtt.client.manual-acks"                        : MANUAL_ACKS,
@@ -114,7 +119,6 @@ class V5ClientConfigurationSpec extends Specification {
                         "mqtt.client.clean-start"                        : CLEAN_START,
                         "mqtt.client.keep-alive-interval"                : KEEP_ALIVE_INTERVAL,
                         "mqtt.client.max-reconnect-delay"                : MAX_RECONNECT_DELAY,
-                        "mqtt.client.server-uris"                        : SERVER_URIS,
                         "mqtt.client.automatic-reconnect"                : AUTOMATIC_RECONNECT,
                         "mqtt.client.session-expiry-interval"            : SESSION_EXPIRY_INTERVAL,
                         "mqtt.client.receive-maximum"                    : RECEIVE_MAXIMUM,
@@ -130,10 +134,11 @@ class V5ClientConfigurationSpec extends Specification {
                         "mqtt.client.send-reason-messages"               : SEND_REASON_MESSAGES,
                         "mqtt.client.https-hostname-verification-enabled": HOSTNAME_VERIFICATION_ENABLED,
                         "mqtt.client.sslhostname-verifier"               : HOSTNAME_VERIFIER,
-//                        "mqtt.client.ssl.certificate-authority"          : SSL_CERTIFICATE_AUTHORITY,
-//                        "mqtt.client.ssl.certificate"                    : SSL_CERTIFICATE,
-//                        "mqtt.client.ssl.private-key"                    : SSL_PRIVATE_KEY,
-//                        "mqtt.client.ssl.password"                       : SSL_PASSWORD,
+                        "mqtt.client.ssl.enabled"                        : SSL_ENABLED,
+                        "mqtt.client.ssl.certificate-authority"          : SSL_CERTIFICATE_AUTHORITY,
+                        "mqtt.client.ssl.certificate"                    : SSL_CERTIFICATE,
+                        "mqtt.client.ssl.private-key"                    : SSL_PRIVATE_KEY,
+                        "mqtt.client.ssl.password"                       : SSL_PASSWORD,
                         "spec.name"                                      : getClass().simpleName
                 ], "test")
     }

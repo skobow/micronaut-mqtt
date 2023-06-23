@@ -27,7 +27,7 @@ import io.micronaut.mqtt.exception.MqttSubscriberException;
 import io.micronaut.mqtt.exception.MqttSubscriberExceptionHandler;
 import io.micronaut.mqtt.intercept.AbstractMqttSubscriberAdvice;
 import io.micronaut.mqtt.v5.bind.MqttV5BindingContext;
-import io.micronaut.mqtt.v5.config.MqttClientConfigurationProperties;
+import io.micronaut.mqtt.v5.config.Mqtt5ClientConfigurationProperties;
 import jakarta.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,13 +48,13 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
 
     private static final Logger LOG = LoggerFactory.getLogger(MqttSubscriberAdvice.class);
     private final Mqtt5AsyncClient mqttAsyncClient;
-    private final MqttClientConfigurationProperties configurationProperties;
+    private final Mqtt5ClientConfigurationProperties configurationProperties;
 
     public MqttSubscriberAdvice(BeanContext beanContext,
                                 MqttBinderRegistry binderRegistry,
                                 MqttSubscriberExceptionHandler exceptionHandler,
                                 Mqtt5AsyncClient mqttAsyncClient,
-                                MqttClientConfigurationProperties configurationProperties) {
+                                Mqtt5ClientConfigurationProperties configurationProperties) {
         super(beanContext, binderRegistry, exceptionHandler);
         this.mqttAsyncClient = mqttAsyncClient;
         this.configurationProperties = configurationProperties;
@@ -98,10 +98,10 @@ public class MqttSubscriberAdvice extends AbstractMqttSubscriberAdvice<MqttMessa
                 context.setTopic(mqtt5Publish.getTopic().toString());
                 context.setMqtt5Publish(mqtt5Publish);
 
-                configurationProperties.getManualAcks().ifPresent(context::setManualAcks);
+                context.setManualAcks(configurationProperties.getManualAcks());
                 callback.accept(context);
 
-            }, configurationProperties.getManualAcks().orElse(false))
+            }, configurationProperties.getManualAcks())
             .whenComplete((mqtt5SubAck, throwable) -> {
                 if (throwable != null) {
                     throw new MqttSubscriberException(String.format("Failed to subscribe to the topics: %s", throwable.getMessage()), throwable);

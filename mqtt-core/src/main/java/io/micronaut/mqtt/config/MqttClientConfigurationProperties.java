@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2022 original authors
+ * Copyright 2017-2023 original authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,85 +13,114 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.micronaut.mqtt.v3.config;
+package io.micronaut.mqtt.config;
 
+import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.MqttClientTransportConfig;
 import com.hivemq.client.mqtt.lifecycle.MqttClientAutoReconnect;
-import com.hivemq.client.mqtt.mqtt3.message.connect.Mqtt3Connect;
+import com.hivemq.client.mqtt.mqtt5.message.connect.Mqtt5Connect;
 import io.micronaut.context.annotation.ConfigurationProperties;
 import io.micronaut.core.annotation.Nullable;
-import io.micronaut.mqtt.ssl.MqttCertificateConfiguration;
-import jakarta.validation.constraints.NotNull;
 
 import javax.net.ssl.HostnameVerifier;
+import java.net.URI;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 
 /**
- * Configuration for the MQTT client.
+ * Abstract base class for MQTT client configuration.
  *
- * @author James Kleeh
  * @author Sven Kobow
- * @since 1.0.0
  */
-@ConfigurationProperties("mqtt.client")
-public class MqttClientConfigurationProperties {
-
-    private String serverUri;
-    private String clientId;
+public abstract class MqttClientConfigurationProperties {
+    private String serverHost = MqttClient.DEFAULT_SERVER_HOST;
+    private Integer serverPort = MqttClient.DEFAULT_SERVER_PORT;
+    private String clientId = null;
     private Duration connectionTimeout = Duration.ofSeconds(MqttClientTransportConfig.DEFAULT_MQTT_CONNECT_TIMEOUT_MS);
     private Boolean manualAcks = false;
     private byte[] password = null;
     private String userName = null;
+    private Integer keepAliveInterval = Mqtt5Connect.DEFAULT_KEEP_ALIVE;
     private Long maxReconnectDelay = MqttClientAutoReconnect.DEFAULT_MAX_DELAY_S;
-    private Integer keepAliveInterval = Mqtt3Connect.DEFAULT_KEEP_ALIVE;
-    private boolean cleanSession = Mqtt3Connect.DEFAULT_CLEAN_SESSION;
     private boolean automaticReconnect = false;
     private Map<String, String> customWebSocketHeaders = null;
     private boolean isHttpsHostnameVerificationEnabled = false;
     private HostnameVerifier sslHostnameVerifier = null;
     private WillMessage willMessage = null;
-    private final MqttCertificateConfiguration certificateConfiguration;
 
-    /**
-     * @param willMessage An optional last will message
-     * @param certificateConfiguration An optional configuration for SSL certificates
-     */
-    public MqttClientConfigurationProperties(
-        @Nullable final WillMessage willMessage,
-        @Nullable final MqttCertificateConfiguration certificateConfiguration) {
-        this.certificateConfiguration = certificateConfiguration;
+    protected MqttClientConfigurationProperties(final WillMessage willMessage) {
         if (willMessage.getTopic() != null) {
             this.willMessage = willMessage;
         }
     }
 
     /**
-     * @return The server URI
+     * @deprecated This property is only kept for backwards compatibility. Use @getServerHost and @getServerPort instead.
+     * Used @io.micronaut.mqtt.ssl.MqttSslConfiguration to enable and configure SSL.
+     * @return The server URI.
      */
-    @NotNull
-    public String getServerUri() {
-        return serverUri;
+    @Deprecated
+    @Nullable
+    public URI getServerUri() {
+        final String schema = isSSL() ? "ssl" : "tcp";
+
+        return URI.create(String.format("%s://%s:%s", schema, serverHost, serverPort));
+    }
+
+    protected abstract boolean isSSL();
+
+    protected abstract void onChangeServerUri(URI serverUri);
+
+    /**
+     * @deprecated This property is only kept for backwards compatibility. Use @setServerHost and @setServerPort instead.
+     * Used @io.micronaut.mqtt.ssl.MqttSslConfiguration to enable and configure SSL.
+     * @param serverUri The server URI.
+     */
+    @Deprecated
+    public void setServerUri(@Nullable final URI serverUri) {
+        onChangeServerUri(serverUri);
+
+        this.serverHost = serverUri.getHost();
+        this.serverPort = serverUri.getPort();
     }
 
     /**
-     * @param serverUri The server URI
+     * @return The host name or IP address of the MQTT server.
      */
-    public void setServerUri(final String serverUri) {
-        this.serverUri = serverUri;
+    public String getServerHost() {
+        return serverHost;
     }
 
     /**
-     * @return The client id
+     * @param serverHost The host name or IP address of the MQTT server.
      */
-    @NotNull
+    public void setServerHost(final String serverHost) {
+        this.serverHost = serverHost;
+    }
+
+    /**
+     * @return The port of the MQTT server
+     */
+    public Integer getServerPort() {
+        return serverPort;
+    }
+
+    /**
+     * @param serverPort The port of the MQTT server.
+     */
+    public void setServerPort(final int serverPort) {
+        this.serverPort = serverPort;
+    }
+
+    /**
+     * @return The client identifier.
+     */
     public String getClientId() {
         return clientId;
     }
 
     /**
-     * @param clientId The client ID
+     * @param clientId The client identifier.
      */
     public void setClientId(final String clientId) {
         this.clientId = clientId;
@@ -114,14 +143,14 @@ public class MqttClientConfigurationProperties {
     /**
      * @return An optional boolean to set the client in manual acknowledge mode
      */
-    public Optional<Boolean> getManualAcks() {
-        return Optional.ofNullable(manualAcks);
+    public boolean getManualAcks() {
+        return this.manualAcks;
     }
 
     /**
      * @param manualAcks Set to true if you wish to manually acknowledge messages
      */
-    public void setManualAcks(final Boolean manualAcks) {
+    public void setManualAcks(final boolean manualAcks) {
         this.manualAcks = manualAcks;
     }
 
@@ -135,7 +164,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param password The password to use for MQTT connections.
      */
-    public void setPassword(final byte[] password) {
+    public void setPassword(@Nullable final byte[] password) {
         this.password = password;
     }
 
@@ -149,7 +178,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param userName The username to use for MQTT connections.
      */
-    public void setUserName(final String userName) {
+    public void setUserName(@Nullable final String userName) {
         this.userName = userName;
     }
 
@@ -163,7 +192,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param maxReconnectDelay The maximum delay for reconnecting.
      */
-    public void setMaxReconnectDelay(final Long maxReconnectDelay) {
+    public void setMaxReconnectDelay(final long maxReconnectDelay) {
         this.maxReconnectDelay = maxReconnectDelay;
     }
 
@@ -177,22 +206,8 @@ public class MqttClientConfigurationProperties {
     /**
      * @param keepAliveInterval The keep alive interval.
      */
-    public void setKeepAliveInterval(final Integer keepAliveInterval) {
+    public void setKeepAliveInterval(final int keepAliveInterval) {
         this.keepAliveInterval = keepAliveInterval;
-    }
-
-    /**
-     * @param cleanSession True if a new session should be started for connection.
-     */
-    public void setCleanSession(final boolean cleanSession) {
-        this.cleanSession = cleanSession;
-    }
-
-    /**
-     * @return If connection should start a new session.
-     */
-    public boolean isCleanSession() {
-        return this.cleanSession;
     }
 
     /**
@@ -219,7 +234,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param customWebSocketHeaders The custom headers that should be sent with web socket connections.
      */
-    public void setCustomWebSocketHeaders(final Map<String, String> customWebSocketHeaders) {
+    public void setCustomWebSocketHeaders(@Nullable final Map<String, String> customWebSocketHeaders) {
         this.customWebSocketHeaders = customWebSocketHeaders;
     }
 
@@ -247,7 +262,7 @@ public class MqttClientConfigurationProperties {
     /**
      * @param hostnameVerifier The hostname verifier to use for hostname verification.
      */
-    public void setSSLHostnameVerifier(HostnameVerifier hostnameVerifier) {
+    public void setSSLHostnameVerifier(@Nullable final HostnameVerifier hostnameVerifier) {
         this.sslHostnameVerifier = hostnameVerifier;
     }
 
@@ -259,14 +274,7 @@ public class MqttClientConfigurationProperties {
     }
 
     /**
-     * @return The SSL certificate configuration with CA and client certificates.
-     */
-    public MqttCertificateConfiguration getCertificateConfiguration() {
-        return certificateConfiguration;
-    }
-
-    /**
-     * Configuration for a last will message
+     * Configuration for a last will message.
      */
     @ConfigurationProperties("will-message")
     public static class WillMessage {

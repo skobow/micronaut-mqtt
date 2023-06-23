@@ -16,6 +16,7 @@
 package io.micronaut.mqtt.ssl;
 
 import io.micronaut.context.annotation.ConfigurationProperties;
+import io.micronaut.core.annotation.Nullable;
 import io.micronaut.core.io.Readable;
 
 /**
@@ -25,12 +26,27 @@ import io.micronaut.core.io.Readable;
  * @since 1.0.0
  */
 @ConfigurationProperties("mqtt.client.ssl")
-public class MqttCertificateConfiguration {
+public class MqttSslConfiguration {
 
+    private boolean enabled = false;
     private Readable certificateAuthority;
     private Readable certificate;
     private Readable privateKey;
     private char[] password;
+
+    /**
+     * @return True if SSL should be used for securing connections.
+     */
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    /**
+     * @param enabled If connections should be secured with SSL.
+     */
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+    }
 
     /**
      * @return The certificate authority
@@ -42,7 +58,7 @@ public class MqttCertificateConfiguration {
     /**
      * @param certificateAuthority The certificate authority location
      */
-    public void setCertificateAuthority(Readable certificateAuthority) {
+    public void setCertificateAuthority(@Nullable final Readable certificateAuthority) {
         this.certificateAuthority = certificateAuthority;
     }
 
@@ -56,7 +72,7 @@ public class MqttCertificateConfiguration {
     /**
      * @param certificate The client certificate location
      */
-    public void setCertificate(Readable certificate) {
+    public void setCertificate(@Nullable final Readable certificate) {
         this.certificate = certificate;
     }
 
@@ -70,7 +86,7 @@ public class MqttCertificateConfiguration {
     /**
      * @param privateKey The client private key location
      */
-    public void setPrivateKey(Readable privateKey) {
+    public void setPrivateKey(@Nullable final Readable privateKey) {
         this.privateKey = privateKey;
     }
 
@@ -84,7 +100,7 @@ public class MqttCertificateConfiguration {
     /**
      * @param password The key password
      */
-    public void setPassword(char[] password) {
+    public void setPassword(@Nullable final char[] password) {
         this.password = password;
     }
 }
